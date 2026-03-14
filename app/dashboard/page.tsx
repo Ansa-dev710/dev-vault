@@ -12,21 +12,14 @@ export default function DashboardPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 1. Initial Load Logic
   useEffect(() => {
     setIsMounted(true);
     const saved = localStorage.getItem("dev-vault-resources");
-    
     if (saved) {
       const localData: Resource[] = JSON.parse(saved);
-      
-      /* IMPORTANT: Agar constant.ts mein naya card aaya hai jo local storage mein nahi hai,
-         toh ye logic usay dhoond kar add kar degi (Force Sync).
-      */
       const newItemsFromConstant = DEV_RESOURCES.filter(
         (def) => !localData.some((loc) => loc.id === def.id)
       );
-
       if (newItemsFromConstant.length > 0) {
         const updatedList = [...localData, ...newItemsFromConstant];
         setResources(updatedList);
@@ -35,12 +28,10 @@ export default function DashboardPage() {
         setResources(localData);
       }
     } else {
-      // First time user ke liye direct constants load karein
       setResources(DEV_RESOURCES);
     }
   }, []);
 
-  // 2. Continuous Sync to LocalStorage
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem("dev-vault-resources", JSON.stringify(resources));
@@ -66,37 +57,42 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="space-y-10 min-h-screen pb-20">
-      {/* --- HEADER --- */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div>
+    <div className="space-y-8 min-h-screen pb-20 max-w-[1400px] mx-auto px-6">
+      
+      {/* --- HEADER: Refined alignment and spacing --- */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-12">
+        <div className="flex-shrink-0">
           <motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-4xl font-black text-slate-900 tracking-tight"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-black text-slate-900 tracking-tight"
           >
             Resources Vault
           </motion.h1>
-          <p className="text-slate-600 font-semibold mt-1">
+          <p className="text-slate-500 font-medium text-sm mt-1">
             Your personal collection of tools and docs.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <SearchBar onSearch={setSearchTerm} />
+
+        {/* Controls: Compact sizes for Search and Button */}
+        <div className="flex items-center gap-3 w-full md:w-auto mb-1">
+          <div className="flex-1 md:w-72 lg:w-80">
+             <SearchBar onSearch={setSearchTerm} />
+          </div>
           <AddResourceModal onAdd={handleAdd} />
         </div>
       </div>
 
-      {/* --- FILTERS --- */}
-      <div className="flex items-center gap-2 p-2 bg-slate-100 border border-slate-200 w-fit rounded-2xl overflow-x-auto no-scrollbar">
+      {/* --- FILTERS: Smaller and more elegant --- */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/80 border border-slate-200/60 w-fit rounded-2xl overflow-x-auto no-scrollbar shadow-inner">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-6 py-2 rounded-xl text-xs font-black transition-all duration-300 whitespace-nowrap ${
+            className={`px-5 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-300 whitespace-nowrap ${
               activeCategory === cat 
-              ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200 scale-105" 
-              : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
+              ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" 
+              : "text-slate-400 hover:text-slate-600"
             }`}
           >
             {cat}
@@ -109,50 +105,50 @@ export default function DashboardPage() {
         {filteredResources.length > 0 ? (
           <motion.div 
             layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredResources.map((item) => (
               <motion.div
                 layout
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white p-8 flex flex-col justify-between h-64 rounded-[2.5rem] border border-slate-200 shadow-md hover:shadow-2xl hover:border-blue-200 group transition-all duration-500 relative"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white p-7 flex flex-col justify-between min-h-[300px] rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 group transition-all duration-500 relative overflow-hidden"
               >
                 {/* Delete Button */}
                 <button 
                   onClick={() => handleDelete(item.id)}
-                  className="absolute top-6 right-6 p-2.5 bg-red-50 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-300 z-10"
+                  className="absolute top-5 right-5 p-2 bg-red-50 text-red-400 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-300 z-10"
                 >
-                  <Trash2 size={16} strokeWidth={2.5} />
+                  <Trash2 size={14} strokeWidth={2.5} />
                 </button>
 
                 <div>
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-700 bg-blue-100/80 px-3 py-1.5 rounded-lg">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg border border-blue-100/50">
                       {item.category}
                     </span>
-                    <Folder size={20} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    <Folder size={18} className="text-slate-200 group-hover:text-blue-500 transition-colors" />
                   </div>
                   
-                  <h3 className="text-2xl font-black text-slate-900 mt-6 group-hover:text-blue-700 transition-colors">
+                  <h3 className="text-xl font-black text-slate-800 mt-6 group-hover:text-blue-600 transition-colors line-clamp-1">
                     {item.name}
                   </h3>
-                  <p className="text-sm text-slate-600 mt-2 line-clamp-2 font-medium leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-medium leading-relaxed">
                     {item.description}
                   </p>
                 </div>
                 
-                <div className="flex flex-col gap-1 mt-4">
-                  <p className="text-[10px] text-slate-400 font-mono truncate mb-2">{item.url}</p>
+                <div className="mt-8 space-y-3">
+                  <p className="text-[10px] text-slate-400 font-mono truncate px-1 opacity-60">{item.url}</p>
                   <a 
                     href={item.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black hover:bg-blue-600 shadow-xl shadow-slate-200 hover:shadow-blue-200 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-bold hover:bg-blue-600 shadow-md transition-all active:scale-[0.97]"
                   >
-                    Open Link <ExternalLink size={14} strokeWidth={3} />
+                    Open Link <ExternalLink size={14} strokeWidth={2.5} />
                   </a>
                 </div>
               </motion.div>
@@ -162,13 +158,11 @@ export default function DashboardPage() {
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="py-32 flex flex-col items-center justify-center bg-white rounded-[4rem] border-4 border-dashed border-slate-50"
+            className="py-24 flex flex-col items-center justify-center bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200"
           >
-            <div className="p-6 bg-slate-50 rounded-full mb-6">
-              <SearchX size={48} className="text-slate-300" />
-            </div>
-            <p className="text-slate-800 font-black text-2xl tracking-tight">No resources found</p>
-            <p className="text-slate-500 font-medium mt-1">Try a different keyword or category.</p>
+            <SearchX size={40} className="text-slate-300 mb-4" />
+            <p className="text-slate-700 font-bold text-xl tracking-tight">No resources found</p>
+            <p className="text-slate-400 text-sm mt-1">Try a different keyword or category.</p>
           </motion.div>
         )}
       </AnimatePresence>

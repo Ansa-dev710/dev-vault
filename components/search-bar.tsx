@@ -1,12 +1,12 @@
 "use client";
 import { Search, X, Command } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SearchBar({ onSearch }: { onSearch: (term: string) => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcut listener (Press '/' to focus search)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "/" && document.activeElement !== inputRef.current) {
@@ -18,13 +18,11 @@ export default function SearchBar({ onSearch }: { onSearch: (term: string) => vo
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Handle Input Change
   const handleChange = (val: string) => {
     setQuery(val);
     onSearch(val);
   };
 
-  // Clear Search
   const clearSearch = () => {
     setQuery("");
     onSearch("");
@@ -32,10 +30,10 @@ export default function SearchBar({ onSearch }: { onSearch: (term: string) => vo
   };
 
   return (
-    <div className="relative w-full max-w-sm group">
-      {/* Search Icon */}
-      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
-        <Search size={18} strokeWidth={2.5} />
+    <div className="relative w-full md:w-72 lg:w-80 group">
+      {/* Icon size and position adjusted for smaller height */}
+      <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
+        <Search size={16} strokeWidth={2.5} />
       </div>
 
       <input
@@ -43,24 +41,36 @@ export default function SearchBar({ onSearch }: { onSearch: (term: string) => vo
         type="text"
         value={query}
         onChange={(e) => handleChange(e.target.value)}
-        className="block w-full pl-11 pr-12 py-3 bg-white border border-slate-200 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 sm:text-sm transition-all shadow-sm group-hover:border-slate-300 font-medium"
+        // SIZE FIX: py-3.5 se kam kar ke py-2.5 kiya aur rounded-xl kiya
+        className="block w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-xl text-sm leading-5 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all shadow-sm group-hover:border-slate-300 font-medium text-slate-700"
         placeholder="Search vault..."
       />
 
-      {/* Right Action Icons */}
       <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-        {query ? (
-          <button 
-            onClick={clearSearch}
-            className="p-1 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 transition-all"
-          >
-            <X size={16} strokeWidth={3} />
-          </button>
-        ) : (
-          <div className="hidden sm:flex items-center gap-1 px-1.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 text-[10px] font-bold uppercase tracking-tighter pointer-events-none group-focus-within:opacity-0 transition-opacity">
-            <Command size={10} /> /
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {query ? (
+            <motion.button
+              key="clear-button"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={clearSearch}
+              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+            >
+              <X size={14} strokeWidth={3} />
+            </motion.button>
+          ) : (
+            <motion.div
+              key="shortcut-indicator"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-slate-400 text-[9px] font-bold uppercase tracking-tighter pointer-events-none group-focus-within:opacity-0 transition-opacity duration-200"
+            >
+              <Command size={9} /> <span>/</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
