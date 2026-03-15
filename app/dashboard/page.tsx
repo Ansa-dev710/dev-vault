@@ -3,50 +3,84 @@ import { useState, useEffect } from "react";
 import { DEV_RESOURCES, CATEGORIES, Resource } from "@/lib/constant";
 import SearchBar from "@/components/search-bar";
 import AddResourceModal from "@/components/add-resource-model";
-import { ExternalLink, Folder, SearchX, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import ResourceSkeleton from "@/components/resource-skeleton"; 
+import { 
+  SearchX, Trash2, Moon, Sun, LayoutGrid, List, Copy, Check, BarChart2, ChevronDown 
+} from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { toast } from "sonner";
+
+// --- ANIMATION VARIANTS ---
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const cardVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    transition: { type: "spring", stiffness: 100, damping: 15 } 
+  },
+  hover: { 
+    y: -8, 
+    transition: { type: "spring", stiffness: 300 } 
+  }
+};
 
 export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [resources, setResources] = useState<Resource[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isLoading, setIsLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const saved = localStorage.getItem("dev-vault-resources");
-    if (saved) {
-      const localData: Resource[] = JSON.parse(saved);
-      const newItemsFromConstant = DEV_RESOURCES.filter(
-        (def) => !localData.some((loc) => loc.id === def.id)
-      );
-      if (newItemsFromConstant.length > 0) {
-        const updatedList = [...localData, ...newItemsFromConstant];
-        setResources(updatedList);
-        localStorage.setItem("dev-vault-resources", JSON.stringify(updatedList));
-      } else {
-        setResources(localData);
-      }
-    } else {
-      setResources(DEV_RESOURCES);
+    const savedResources = localStorage.getItem("dev-vault-resources");
+    const savedTheme = localStorage.getItem("vault-theme");
+    
+    if (savedResources) setResources(JSON.parse(savedResources));
+    else setResources(DEV_RESOURCES);
+
+    if (savedTheme === "dark") {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
     }
+    setTimeout(() => setIsLoading(false), 800);
   }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem("dev-vault-resources", JSON.stringify(resources));
-    }
-  }, [resources, isMounted]);
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem("vault-theme", nextDark ? "dark" : "light");
+  };
 
-  const handleAdd = (newResource: Resource) => {
-    setResources((prev) => [newResource, ...prev]);
+  const handleCopy = (id: number, url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    toast.success("Link copied!");
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this resource?")) {
-      setResources((prev) => prev.filter((item) => item.id !== id));
-    }
+    const updated = resources.filter((item) => item.id !== id);
+    setResources(updated);
+    localStorage.setItem("dev-vault-resources", JSON.stringify(updated));
+    toast.error("Deleted successfully");
   };
+
+  // Stats logic
+  const statsData = CATEGORIES.filter(c => c !== "All").map(cat => ({
+    name: cat,
+    count: resources.filter(r => r.category === cat).length
+  }));
 
   const filteredResources = resources.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -57,115 +91,171 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="space-y-8 min-h-screen pb-20 max-w-[1400px] mx-auto px-6">
-      
-      {/* --- HEADER: Refined alignment and spacing --- */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-12">
-        <div className="flex-shrink-0">
+    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors pb-20">
+      <div className="max-w-7xl mx-auto px-6 space-y-6">
+        
+        {/* --- HEADER SECTION --- */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pt-10">
           <motion.h1 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-black text-slate-900 tracking-tight"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter shrink-0"
           >
-            Resources Vault
+            Resource Vault<span className="text-blue-600"></span>
           </motion.h1>
-          <p className="text-slate-500 font-medium text-sm mt-1">
-            Your personal collection of tools and docs.
-          </p>
-        </div>
 
-        {/* Controls: Compact sizes for Search and Button */}
-        <div className="flex items-center gap-3 w-full md:w-auto mb-1">
-          <div className="flex-1 md:w-72 lg:w-80">
-             <SearchBar onSearch={setSearchTerm} />
+          <div className="flex items-center gap-3 w-full lg:max-w-xl">
+            <div className="flex-1 min-w-0">
+              <SearchBar onSearch={setSearchTerm} />
+            </div>
+            <div className="shrink-0">
+              <AddResourceModal onAdd={(res) => setResources([res, ...resources])} />
+            </div>
+            <button 
+              onClick={toggleTheme} 
+              className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 hover:text-blue-600 transition-all shrink-0"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
-          <AddResourceModal onAdd={handleAdd} />
         </div>
-      </div>
 
-      {/* --- FILTERS: Smaller and more elegant --- */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/80 border border-slate-200/60 w-fit rounded-2xl overflow-x-auto no-scrollbar shadow-inner">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-5 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-300 whitespace-nowrap ${
-              activeCategory === cat 
-              ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" 
-              : "text-slate-400 hover:text-slate-600"
-            }`}
+        {/* --- ANALYTICS TOGGLE & SECTION --- */}
+        <div className="pt-2">
+          <button 
+            onClick={() => setShowStats(!showStats)}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors mb-4"
           >
-            {cat}
+            <BarChart2 size={14} /> {showStats ? "Hide Highlights" : "Show Highlights"}
+            <motion.div animate={{ rotate: showStats ? 180 : 0 }}><ChevronDown size={14} /></motion.div>
           </button>
-        ))}
-      </div>
 
-      {/* --- RESOURCES GRID --- */}
-      <AnimatePresence mode="popLayout">
-        {filteredResources.length > 0 ? (
-          <motion.div 
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filteredResources.map((item) => (
-              <motion.div
-                layout
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-white p-7 flex flex-col justify-between min-h-[300px] rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 group transition-all duration-500 relative overflow-hidden"
+          <AnimatePresence>
+            {showStats && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
               >
-                {/* Delete Button */}
-                <button 
-                  onClick={() => handleDelete(item.id)}
-                  className="absolute top-5 right-5 p-2 bg-red-50 text-red-400 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-300 z-10"
-                >
-                  <Trash2 size={14} strokeWidth={2.5} />
-                </button>
-
-                <div>
-                  <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg border border-blue-100/50">
-                      {item.category}
-                    </span>
-                    <Folder size={18} className="text-slate-200 group-hover:text-blue-500 transition-colors" />
-                  </div>
-                  
-                  <h3 className="text-xl font-black text-slate-800 mt-6 group-hover:text-blue-600 transition-colors line-clamp-1">
-                    {item.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-medium leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-                
-                <div className="mt-8 space-y-3">
-                  <p className="text-[10px] text-slate-400 font-mono truncate px-1 opacity-60">{item.url}</p>
-                  <a 
-                    href={item.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-bold hover:bg-blue-600 shadow-md transition-all active:scale-[0.97]"
-                  >
-                    Open Link <ExternalLink size={14} strokeWidth={2.5} />
-                  </a>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6">
+                  {statsData.map((stat) => (
+                    <motion.div 
+                      key={stat.name}
+                      whileHover={{ y: -5 }}
+                      className="relative overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm"
+                    >
+                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl" />
+                      <div className="relative z-10 flex justify-between items-start mb-4">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.name}</span>
+                        <div className="bg-blue-50 dark:bg-blue-500/10 p-2 rounded-xl">
+                          <BarChart2 size={12} className="text-blue-600" />
+                        </div>
+                      </div>
+                      <div className="relative z-10 flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.count}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">pcs</span>
+                      </div>
+                      <div className="relative z-10 mt-4 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${(stat.count / (resources.length || 1)) * 100}%` }} 
+                          transition={{ duration: 1 }} 
+                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(37,99,235,0.2)]" 
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* --- FILTERS & VIEW MODE --- */}
+        <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-slate-50 dark:border-slate-900/50">
+          <div className="flex items-center gap-2 p-1 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl overflow-x-auto no-scrollbar">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
+                  activeCategory === cat ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                {cat}
+              </button>
             ))}
-          </motion.div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="py-24 flex flex-col items-center justify-center bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200"
-          >
-            <SearchX size={40} className="text-slate-300 mb-4" />
-            <p className="text-slate-700 font-bold text-xl tracking-tight">No resources found</p>
-            <p className="text-slate-400 text-sm mt-1">Try a different keyword or category.</p>
-          </motion.div>
+          </div>
+          
+          <div className="flex bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl">
+            <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm' : 'text-slate-400'}`}><LayoutGrid size={16} /></button>
+            <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm' : 'text-slate-400'}`}><List size={16} /></button>
+          </div>
+        </div>
+
+        {/* --- CARDS GRID --- */}
+        {isLoading ? <ResourceSkeleton /> : (
+          <AnimatePresence mode="popLayout">
+            {filteredResources.length > 0 ? (
+              <motion.div 
+                layout 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}
+              >
+                {filteredResources.map((item) => (
+                  <motion.div
+                    layout
+                    key={item.id}
+                    variants={cardVariants}
+                    whileHover="hover"
+                    className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-8 hover:shadow-xl transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-6">
+                        <span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-400/10 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-400/20">
+                          {item.category}
+                        </span>
+                        <button onClick={() => handleDelete(item.id)} className="text-slate-200 hover:text-red-500 transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">{item.name}</h3>
+                      <p className="text-slate-400 dark:text-slate-500 mt-2 text-sm line-clamp-2 leading-relaxed">{item.description}</p>
+                    </div>
+                    
+                    <div className="mt-8 flex gap-3">
+                      <motion.a 
+                        whileTap={{ scale: 0.95 }}
+                        href={item.url} 
+                        target="_blank" 
+                        className="flex-1 text-center py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-[10px] font-black hover:opacity-90 transition-all uppercase tracking-widest"
+                      >
+                        Visit Site
+                      </motion.a>
+                      <motion.button 
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleCopy(item.id, item.url)} 
+                        className="p-4 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl hover:text-blue-600 transition-colors"
+                      >
+                        {copiedId === item.id ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <div className="text-center py-20 opacity-20">
+                <SearchX size={48} className="mx-auto mb-4" />
+                <p className="font-bold uppercase tracking-widest text-xs">Empty Vault</p>
+              </div>
+            )}
+          </AnimatePresence>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
