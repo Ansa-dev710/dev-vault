@@ -1,5 +1,16 @@
 
-export const DEV_RESOURCES = [
+export type CategoryType = "All" | "Framework" | "Tools" | "Design" | "Docs";
+
+export interface Resource {
+  id: number;
+  name: string;
+  category: Exclude<CategoryType, "All">
+  url: string;
+  description: string;
+}
+
+// 2. Resource Data with consistent types
+export const DEV_RESOURCES: Resource[] = [
   {
     id: 1,
     name: "Next.js Docs",
@@ -20,7 +31,15 @@ export const DEV_RESOURCES = [
     category: "Tools",
     url: "https://lucide.dev",
     description: "Beautiful & consistent icon toolkit made by the community."
+  },
+  {
+    id: 4,
+    name: "MDN Web Docs",
+    category: "Docs",
+    url: "https://developer.mozilla.org",
+    description: "Resources for developers, by developers."
   }
 ];
 
-export const CATEGORIES = ["All", "Framework", "Tools", "Design", "Docs"];
+
+export const CATEGORIES: CategoryType[] = ["All", "Framework", "Tools", "Design", "Docs"];

@@ -31,19 +31,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative">
       
-      {/* --- SIDEBAR --- */}
-      <aside className="w-64 border-r border-slate-100 dark:border-slate-800 hidden md:flex flex-col bg-white dark:bg-slate-900 shrink-0 z-40">
+      {/* --- UPDATED DARK SIDEBAR --- */}
+      <aside className="w-64 border-r border-slate-800 hidden md:flex flex-col bg-slate-900 dark:bg-slate-950 shrink-0 z-40">
         <div className="p-7 pb-10">
           <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-12 transition-transform duration-300">
                 <Sparkles className="text-white" size={20} />
             </div>
-            <span className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">DevVault</span>
+            <span className="text-xl font-black text-white tracking-tighter">DevVault</span>
           </Link>
         </div>
         
         <nav className="flex-1 px-4 space-y-1.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-4 px-4">Main Menu</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 px-4">Main Menu</p>
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -53,8 +53,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href={link.href} 
                 className={`group flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 ${
                   isActive 
-                  ? 'bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-white shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -67,13 +67,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* --- BOTTOM USER SECTION --- */}
-        <div className="p-4 mt-auto border-t border-slate-50 dark:border-slate-800">
-          <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-            <div className="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xs">A</div>
+        {/* --- BOTTOM USER SECTION (Dark Themed) --- */}
+        <div className="p-4 mt-auto border-t border-slate-800">
+          <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+            <div className="h-9 w-9 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xs">A</div>
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-black truncate">ANSA Dev</span>
-              <span className="text-[9px] text-slate-400 font-bold uppercase">Pro Plan</span>
+              <span className="text-xs font-black text-white truncate">ANSA Dev</span>
+              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Pro Plan</span>
             </div>
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-400/10 dark:bg-indigo-600/5 rounded-full blur-[120px]" />
         </div>
 
-        {/* --- DARK MODE PREMIUM NAVBAR --- */}
+        {/* --- DARK NAVBAR (Stays as it was) --- */}
         <header className="h-20 bg-slate-900 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 flex items-center px-8 justify-between shrink-0 z-50 relative">
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -97,12 +97,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-blue-400">Pages</span>
             </div>
             <h2 className="text-sm font-black text-white tracking-tight">
-               {pathname === '/dashboard' ? 'Resources Vault' : 'Settings'}
+                {pathname === '/dashboard' ? 'Resources Vault' : pathname.split('/').pop()?.replace('-', ' ')}
             </h2>
           </div>
           
           <div className="flex items-center gap-4">
-            {/* NOTIFICATIONS DROPDOWN */}
             <div className="relative">
               <motion.button 
                 whileTap={{ scale: 0.9 }}
@@ -150,7 +149,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </AnimatePresence>
             </div>
 
-            {/* PROFILE DROPDOWN */}
             <div className="relative">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
