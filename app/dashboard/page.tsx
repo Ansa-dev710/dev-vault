@@ -127,7 +127,7 @@ export default function DashboardPage() {
     <div className="relative min-h-screen bg-white dark:bg-[#020617] transition-colors duration-700 pb-40 selection:bg-blue-500 selection:text-white">
       <Toaster position="top-right" richColors />
       
-      {/* --- FIXED NAVIGATION (Doesn't move on scroll) --- */}
+      {/* --- FIXED NAVIGATION --- */}
       <div className="fixed bottom-10 left-0 right-0 z-[100] flex justify-center pointer-events-none">
         <nav className="pointer-events-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl 
           border border-slate-200/50 dark:border-slate-800/50 
@@ -161,9 +161,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-full md:w-80 lg:w-[400px]">
-              <SearchBar onSearch={setSearchTerm} />
-            </div>
+            {/* FIX: Hide main search bar if we are on the Collab tab to avoid double bars */}
+            {activeTab !== "collab" && (
+              <div className="w-full md:w-80 lg:w-[400px]">
+                <SearchBar onSearch={setSearchTerm} />
+              </div>
+            )}
+            
             <div className="flex items-center gap-2">
               {activeTab === "resources" && (
                 <AddResourceModal onAdd={handleAddResource} />
