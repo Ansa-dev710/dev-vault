@@ -8,10 +8,12 @@ import NotesSection from "@/components/notes-section";
 import TasksSection from "@/components/tasks-section"; 
 import SnippetsSection from "@/components/snippets-section"; 
 import ScheduleSection from "@/components/sechdule-section";
+import CollaborationSection from "@/components/collabration-section";
 
 import { 
   Trash2, Moon, Sun, Copy, Check, 
-  LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, Calendar as CalendarIcon
+  LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
+  Calendar as CalendarIcon, Users 
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { toast, Toaster } from "sonner";
@@ -33,7 +35,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
   return (
     <button 
       onClick={onClick}
-      className={`relative flex items-center gap-3 px-6 py-3.5 rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all duration-500 overflow-hidden ${
+      className={`relative flex items-center gap-3 px-5 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 flex-shrink-0 ${
         active 
         ? "text-white scale-105" 
         : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -48,14 +50,14 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
         />
       )}
       <span className="relative z-10">{icon}</span>
-      <span className="relative z-10 hidden md:inline">{label}</span>
+      <span className="relative z-10 hidden lg:inline whitespace-nowrap">{label}</span>
     </button>
   );
 }
 
 // --- 3. MAIN DASHBOARD PAGE ---
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule">("resources");
+  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab">("resources");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [resources, setResources] = useState<Resource[]>([]);
@@ -64,7 +66,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  // Lifecycle & Theme Init
   useEffect(() => {
     setIsMounted(true);
     const savedResources = localStorage.getItem("dev-vault-resources");
@@ -84,7 +85,6 @@ export default function DashboardPage() {
     setTimeout(() => setIsLoading(false), 1000);
   }, []);
 
-  // Filter Logic
   const filteredResources = useMemo(() => {
     return resources.filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -93,7 +93,6 @@ export default function DashboardPage() {
     });
   }, [searchTerm, activeCategory, resources]);
 
-  // Actions
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
@@ -125,21 +124,28 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] transition-colors duration-700 pb-32 selection:bg-blue-500 selection:text-white">
+    <div className="relative min-h-screen bg-white dark:bg-[#020617] transition-colors duration-700 pb-40 selection:bg-blue-500 selection:text-white">
       <Toaster position="top-right" richColors />
       
-      {/* --- FLOATING NAVIGATION --- */}
-      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 p-2 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] flex gap-1 items-center">
-        <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={18} />} label="Resources" />
-        <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={18} />} label="Snippets" />
-        <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={18} />} label="Schedule" />
-        <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={18} />} label="Notes" />
-        <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={18} />} label="Tasks" />
-      </nav>
+      {/* --- FIXED NAVIGATION (Doesn't move on scroll) --- */}
+      <div className="fixed bottom-10 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+        <nav className="pointer-events-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl 
+          border border-slate-200/50 dark:border-slate-800/50 
+          p-2 rounded-[3rem] 
+          shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] 
+          flex items-center gap-1.5 
+          max-w-[95vw] md:max-w-fit overflow-x-auto no-scrollbar whitespace-nowrap box-border">
+          
+          <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={18} />} label="Resources" />
+          <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={18} />} label="Snippets" />
+          <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={18} />} label="Schedule" />
+          <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={18} />} label="Notes" />
+          <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={18} />} label="Tasks" />
+          <NavButton active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={18} />} label="Team" />
+        </nav>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-10">
-        
-        {/* --- STYLED HEADER --- */}
+      <div className="max-w-7xl mx-auto px-6 md:px-10">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-20 pb-10 mb-12 border-b border-slate-100 dark:border-slate-900">
           <div className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
@@ -147,15 +153,15 @@ export default function DashboardPage() {
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Workspace / {activeTab}</span>
             </div>
             <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">
-              {activeTab}<span className="text-blue-600 not-italic">.</span>
+              {activeTab}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-md leading-relaxed">
-              Curate and manage your <span className="text-slate-900 dark:text-slate-200 font-bold underline decoration-blue-500/30">digital ecosystem</span> with precision.
+              Curate and manage your digital ecosystem with precision.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-full md:w-80 lg:w-[400px] group">
+            <div className="w-full md:w-80 lg:w-[400px]">
               <SearchBar onSearch={setSearchTerm} />
             </div>
             <div className="flex items-center gap-2">
@@ -172,10 +178,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* --- MAIN CONTENT AREA --- */}
         <AnimatePresence mode="wait">
-          
-          {/* RESOURCES TAB */}
           {activeTab === "resources" && (
             <motion.div key="resources" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
               <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
@@ -183,7 +186,7 @@ export default function DashboardPage() {
                   <button 
                     key={cat} 
                     onClick={() => setActiveCategory(cat)} 
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                       activeCategory === cat 
                       ? "bg-slate-900 dark:bg-blue-600 text-white shadow-lg scale-105" 
                       : "bg-slate-50 dark:bg-slate-900 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -247,34 +250,35 @@ export default function DashboardPage() {
             </motion.div>
           )}
 
-          {/* SCHEDULE TAB */}
           {activeTab === "schedule" && (
             <motion.div key="schedule" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <ScheduleSection />
             </motion.div>
           )}
 
-          {/* SNIPPETS TAB */}
           {activeTab === "snippets" && (
             <motion.div key="snippets" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <SnippetsSection />
             </motion.div>
           )}
 
-          {/* NOTES TAB */}
           {activeTab === "notes" && (
             <motion.div key="notes" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <NotesSection />
             </motion.div>
           )}
 
-          {/* TASKS TAB */}
           {activeTab === "tasks" && (
             <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto">
               <TasksSection />
             </motion.div>
           )}
 
+          {activeTab === "collab" && (
+            <motion.div key="collab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+              <CollaborationSection />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
