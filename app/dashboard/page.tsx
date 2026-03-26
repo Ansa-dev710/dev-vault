@@ -9,11 +9,12 @@ import TasksSection from "@/components/tasks-section";
 import SnippetsSection from "@/components/snippets-section"; 
 import ScheduleSection from "@/components/sechdule-section";
 import CollaborationSection from "@/components/collabration-section";
+import AnalyticsSection from "@/components/AnalyticsDashboard"; 
 
 import { 
   Trash2, Moon, Sun, Copy, Check, 
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users 
+  Calendar as CalendarIcon, Users, BarChart3 // Added BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { toast, Toaster } from "sonner";
@@ -57,7 +58,8 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
 
 // --- 3. MAIN DASHBOARD PAGE ---
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab">("resources");
+  // Updated type definition for activeTab
+  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics">("resources");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [resources, setResources] = useState<Resource[]>([]);
@@ -139,6 +141,8 @@ export default function DashboardPage() {
           <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={18} />} label="Resources" />
           <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={18} />} label="Snippets" />
           <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={18} />} label="Schedule" />
+          {/* New Analytics Button */}
+          <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={18} />} label="Analytics" />
           <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={18} />} label="Notes" />
           <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={18} />} label="Tasks" />
           <NavButton active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={18} />} label="Team" />
@@ -161,8 +165,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* FIX: Hide main search bar if we are on the Collab tab to avoid double bars */}
-            {activeTab !== "collab" && (
+            {/* Search bar hidden for Collab and Analytics */}
+            {activeTab !== "collab" && activeTab !== "analytics" && (
               <div className="w-full md:w-80 lg:w-[400px]">
                 <SearchBar onSearch={setSearchTerm} />
               </div>
@@ -263,6 +267,13 @@ export default function DashboardPage() {
           {activeTab === "snippets" && (
             <motion.div key="snippets" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <SnippetsSection />
+            </motion.div>
+          )}
+
+          {/* New Analytics Section Rendering */}
+          {activeTab === "analytics" && (
+            <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+              <AnalyticsSection />
             </motion.div>
           )}
 
