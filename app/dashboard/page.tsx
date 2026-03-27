@@ -19,46 +19,39 @@ import {
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
-// --- 1. ANIMATION VARIANTS ---
+// --- ANIMATION VARIANTS ---
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
 
 const cardVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
-  exit: { scale: 0.95, opacity: 0 }
+  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 260, damping: 20 } },
 };
 
-// --- 2. HELPER COMPONENTS ---
+// --- NAV BUTTON COMPONENT ---
 function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
       onClick={onClick}
-      // flex-shrink-0 is the most important class here to prevent the button from collapsing
-      className={`relative flex items-center gap-3 px-6 py-3.5 rounded-[2.5rem] text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-500 flex-shrink-0 whitespace-nowrap ${
-        active 
-        ? "text-white scale-105" 
-        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+      className={`relative flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-full text-[10px] font-bold uppercase transition-all duration-300 whitespace-nowrap z-20 ${
+        active ? "text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
       }`}
     >
       {active && (
         <motion.div 
           layoutId="nav-bg"
-          className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 shadow-xl shadow-blue-500/30"
-          initial={false}
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-          style={{ borderRadius: '2.5rem' }}
+          className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md"
+          style={{ borderRadius: '9999px' }}
         />
       )}
-      <span className="relative z-10">{icon}</span>
-      <span className="relative z-10 hidden lg:inline">{label}</span>
+      <span className="relative z-30">{icon}</span>
+      <span className="relative z-30 hidden lg:inline-block">{label}</span>
     </button>
   );
 }
 
-// --- 3. MAIN DASHBOARD PAGE ---
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics">("resources");
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,7 +78,7 @@ export default function DashboardPage() {
       setIsDark(true);
       document.documentElement.classList.add("dark");
     }
-    setTimeout(() => setIsLoading(false), 800);
+    setTimeout(() => setIsLoading(false), 600);
   }, []);
 
   const filteredResources = useMemo(() => {
@@ -127,117 +120,103 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="relative min-h-screen bg-background transition-colors duration-500 pb-44">
+    <div className="relative min-h-screen bg-slate-50 dark:bg-[#0B0F1A] transition-colors duration-500">
       <Toaster position="top-right" richColors />
       
-      {/* --- RE-ENGINEERED NAVIGATION BAR --- */}
-      <div className="fixed bottom-8 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none">
-        <nav className="pointer-events-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl 
-          border border-slate-200 dark:border-slate-800 
-          p-2 rounded-[3.5rem] shadow-2xl
-          max-w-[98vw] md:max-w-fit overflow-hidden">
-          
-          {/* Internal wrapper that allows scrolling if buttons overflow */}
-          <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth px-2">
-            {/* min-w-max is critical: it forces the inner div to be as wide as all buttons combined */}
-            <div className="flex items-center gap-1 min-w-max py-1">
-              <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={18} />} label="Resources" />
-              <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={18} />} label="Snippets" />
-              <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={18} />} label="Schedule" />
-              <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={18} />} label="Analytics" />
-              <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={18} />} label="Notes" />
-              <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={18} />} label="Tasks" />
-              <NavButton active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={18} />} label="Team" />
-            </div>
+      {/* NAVIGATION BAR */}
+      <div className="fixed bottom-6 left-0 right-0 z-[999] flex justify-center px-4">
+        <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-1.5 rounded-full shadow-2xl flex items-center max-w-full overflow-hidden">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar px-1">
+              <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Resources" />
+              <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={16} />} label="Snippets" />
+              <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={16} />} label="Schedule" />
+              <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={16} />} label="Analytics" />
+              <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={16} />} label="Notes" />
+              <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={16} />} label="Tasks" />
+              <NavButton active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={16} />} label="Team" />
           </div>
         </nav>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-24 pb-12 mb-12 border-b border-slate-200 dark:border-slate-800">
-          <div className="space-y-4">
+      <main className="max-w-7xl mx-auto px-6 pt-16 pb-40">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-slate-200 dark:border-slate-800 pb-10">
+          <div className="space-y-2">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-              <Sparkles size={18} className="animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em]">Workspace / {activeTab}</span>
+              <Sparkles size={14} className="animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Workspace / {activeTab}</span>
             </div>
-            <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">
-              {activeTab}
-            </h1>
+            <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">{activeTab}</h1>
           </div>
-
-          <div className="flex items-center gap-4">
-            {activeTab !== "collab" && activeTab !== "analytics" && (
-              <div className="w-full md:w-80 lg:w-[450px]">
-                <SearchBar onSearch={setSearchTerm} />
-              </div>
-            )}
-            
-            <div className="flex items-center gap-2">
-              {activeTab === "resources" && (
+          
+          <div className="flex items-center gap-3">
+            {activeTab === "resources" && (
+              <>
+                <div className="w-full md:w-72">
+                  <SearchBar onSearch={setSearchTerm} />
+                </div>
                 <AddResourceModal onAdd={handleAddResource} />
-              )}
-              <button 
-                onClick={toggleTheme} 
-                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-blue-600 transition-all shadow-sm active:scale-90"
-              >
-                {isDark ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-            </div>
+              </>
+            )}
+            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
         </header>
 
         <AnimatePresence mode="wait">
-          {activeTab === "resources" && (
-            <motion.div key="resources" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-12">
-               <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-4">
-                {CATEGORIES.map((cat) => (
-                  <button 
-                    key={cat} 
-                    onClick={() => setActiveCategory(cat)} 
-                    className={`px-7 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                      activeCategory === cat 
-                      ? "bg-slate-900 dark:bg-blue-600 text-white shadow-xl scale-105" 
-                      : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-100 dark:border-slate-800 hover:bg-slate-50"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {[1, 2, 3].map(i => <ResourceSkeleton key={i} />)}
-                </div>
-              ) : (
-                <motion.div layout variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {filteredResources.map((item) => (
-                    <motion.div key={item.id} layout variants={cardVariants} className="dev-card group relative flex flex-col h-full bg-white dark:bg-slate-900/40">
-                      <div className="flex justify-between items-center mb-10">
-                        <div className="px-4 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] font-black uppercase rounded-full border border-blue-100 dark:border-blue-500/20 tracking-tighter">{item.category}</div>
-                        <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
-                      </div>
-                      <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-4">{item.name}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed mb-12">{item.description}</p>
-                      <div className="flex gap-4 mt-auto">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-1 px-6 py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-[1.75rem] text-[10px] font-black text-center uppercase tracking-widest hover:shadow-xl transition-all active:scale-95">Visit Platform</a>
-                        <button onClick={() => handleCopy(item.id, item.url)} className="p-4 bg-slate-50 dark:bg-slate-800/50 text-slate-400 rounded-[1.75rem] hover:text-blue-600 transition-all border border-transparent hover:border-slate-100">{copiedId === item.id ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}</button>
-                      </div>
-                    </motion.div>
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            {activeTab === "resources" && (
+              <div className="space-y-10">
+                {/* Categories */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                  {CATEGORIES.map((cat) => (
+                    <button 
+                      key={cat} 
+                      onClick={() => setActiveCategory(cat)} 
+                      className={`px-6 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${
+                        activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white" : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800"
+                      }`}
+                    >
+                      {cat}
+                    </button>
                   ))}
-                </motion.div>
-              )}
-            </motion.div>
-          )}
+                </div>
 
-          {activeTab === "schedule" && <motion.div key="schedule" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><ScheduleSection /></motion.div>}
-          {activeTab === "snippets" && <motion.div key="snippets" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><SnippetsSection /></motion.div>}
-          {activeTab === "analytics" && <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><AnalyticsSection /></motion.div>}
-          {activeTab === "notes" && <motion.div key="notes" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><NotesSection /></motion.div>}
-          {activeTab === "tasks" && <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto"><TasksSection /></motion.div>}
-          {activeTab === "collab" && <motion.div key="collab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><CollaborationSection /></motion.div>}
+                {/* Resources Grid */}
+                {isLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map(i => <ResourceSkeleton key={i} />)}
+                  </div>
+                ) : (
+                  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredResources.map((item) => (
+                      <motion.div key={item.id} variants={cardVariants} className="p-6 rounded-[2rem] bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/50 shadow-sm group">
+                        <div className="flex justify-between items-center mb-6">
+                          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-bold uppercase rounded-lg">{item.category}</span>
+                          <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={16} /></button>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{item.name}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-6">{item.description}</p>
+                        <div className="flex gap-2">
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-1 px-4 py-3 bg-slate-900 dark:bg-blue-600 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-wider">Visit</a>
+                          <button onClick={() => handleCopy(item.id, item.url)} className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl">{copiedId === item.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "schedule" && <ScheduleSection />}
+            {activeTab === "snippets" && <SnippetsSection />}
+            {activeTab === "analytics" && <AnalyticsSection />}
+            {activeTab === "notes" && <NotesSection />}
+            {activeTab === "tasks" && <TasksSection />}
+            {activeTab === "collab" && <CollaborationSection />}
+          </motion.div>
         </AnimatePresence>
-      </div>
+      </main>
     </div>
   );
 }
