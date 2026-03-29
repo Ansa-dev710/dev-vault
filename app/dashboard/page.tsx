@@ -10,9 +10,10 @@ import SnippetsSection from "@/components/snippets-section";
 import ScheduleSection from "@/components/sechdule-section";
 import CollaborationSection from "@/components/collabration-section";
 import AnalyticsSection from "@/components/AnalyticsDashboard"; 
+import CommandPalette from "@/components/command-platte"; 
 
 import { 
-  Trash2, Moon, Sun, Copy, Check, 
+  Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
   Calendar as CalendarIcon, Users, BarChart3 
 } from "lucide-react";
@@ -43,6 +44,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
         <motion.div 
           layoutId="nav-bg"
           className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
           style={{ borderRadius: '9999px' }}
         />
       )}
@@ -54,6 +56,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics">("resources");
+  const [isCommandOpen, setIsCommandOpen] = useState(false); // Command Palette state
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [resources, setResources] = useState<Resource[]>([]);
@@ -123,6 +126,14 @@ export default function DashboardPage() {
     <div className="relative min-h-screen bg-slate-50 dark:bg-[#0B0F1A] transition-colors duration-500">
       <Toaster position="top-right" richColors />
       
+      {/* COMMAND PALETTE */}
+      <CommandPalette 
+        isOpen={isCommandOpen} 
+        setIsOpen={setIsCommandOpen} 
+        setActiveTab={setActiveTab}
+        activeTab={activeTab}
+      />
+
       {/* NAVIGATION BAR */}
       <div className="fixed bottom-6 left-0 right-0 z-[999] flex justify-center px-4">
         <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-1.5 rounded-full shadow-2xl flex items-center max-w-full overflow-hidden">
@@ -149,22 +160,32 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Quick Search Trigger for Command Palette */}
+            <button 
+              onClick={() => setIsCommandOpen(true)}
+              className="hidden md:flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:border-blue-500 transition-all shadow-sm"
+            >
+              <Search size={16} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Quick Search</span>
+              <kbd className="text-[10px] font-mono opacity-40 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">⌘K</kbd>
+            </button>
+
             {activeTab === "resources" && (
               <>
-                <div className="w-full md:w-72">
+                <div className="w-full md:w-64">
                   <SearchBar onSearch={setSearchTerm} />
                 </div>
                 <AddResourceModal onAdd={handleAddResource} />
               </>
             )}
-            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-transform">
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </header>
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             {activeTab === "resources" && (
               <div className="space-y-10">
                 {/* Categories */}
@@ -174,7 +195,7 @@ export default function DashboardPage() {
                       key={cat} 
                       onClick={() => setActiveCategory(cat)} 
                       className={`px-6 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${
-                        activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white" : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800"
+                        activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white shadow-lg" : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-slate-400"
                       }`}
                     >
                       {cat}
@@ -189,20 +210,34 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredResources.map((item) => (
-                      <motion.div key={item.id} variants={cardVariants} className="p-6 rounded-[2rem] bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/50 shadow-sm group">
-                        <div className="flex justify-between items-center mb-6">
-                          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-bold uppercase rounded-lg">{item.category}</span>
-                          <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={16} /></button>
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{item.name}</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-6">{item.description}</p>
-                        <div className="flex gap-2">
-                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-1 px-4 py-3 bg-slate-900 dark:bg-blue-600 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-wider">Visit</a>
-                          <button onClick={() => handleCopy(item.id, item.url)} className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl">{copiedId === item.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button>
-                        </div>
-                      </motion.div>
-                    ))}
+                    {filteredResources.length > 0 ? (
+                      filteredResources.map((item) => (
+                        <motion.div 
+                          key={item.id} 
+                          variants={cardVariants} 
+                          className="relative p-6 rounded-[2rem] bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 shadow-sm group overflow-hidden"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          
+                          <div className="relative z-10">
+                            <div className="flex justify-between items-center mb-6">
+                              <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase rounded-lg border border-blue-100 dark:border-blue-500/20">{item.category}</span>
+                              <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full transition-all"><Trash2 size={15} /></button>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{item.name}</h3>
+                            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 line-clamp-2 mb-6">{item.description}</p>
+                            <div className="flex gap-2">
+                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-[2] px-4 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-widest hover:opacity-90 transition-opacity">Visit Resource</a>
+                              <button onClick={() => handleCopy(item.id, item.url)} className="flex-1 flex justify-center items-center p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">{copiedId === item.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-20 text-center">
+                        <p className="text-slate-400 text-sm font-medium italic">No resources found matching your criteria.</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </div>

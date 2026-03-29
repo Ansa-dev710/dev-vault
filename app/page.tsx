@@ -1,9 +1,9 @@
-// app/page.tsx
+
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-slate-100 p-4 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient- from-white to-slate-100 p-4 text-center">
       <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
         Dev<span className="text-blue-600">Vault</span>
       </h1>
