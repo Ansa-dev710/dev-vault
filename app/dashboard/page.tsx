@@ -10,7 +10,7 @@ import SnippetsSection from "@/components/snippets-section";
 import ScheduleSection from "@/components/sechdule-section";
 import CollaborationSection from "@/components/collabration-section";
 import AnalyticsSection from "@/components/AnalyticsDashboard"; 
-import CommandPalette from "@/components/command-platte"; 
+import CommandPalette from "@/components/command-platte";
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
@@ -20,15 +20,57 @@ import {
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
-// --- ANIMATION VARIANTS ---
-const containerVariants: Variants = {
+// --- ANIMATION VARIANTS (TS ERROR FIXED WITH 'AS CONST') ---
+const globalContainerVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  visible: { 
+    opacity: 1, 
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 } 
+  },
+  exit: { opacity: 0, transition: { duration: 0.2 } }
 };
 
-const cardVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 260, damping: 20 } },
+const genericCardVariants: Variants = {
+  hidden: { y: 15, opacity: 0 },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    transition: { type: "spring" as const, stiffness: 300, damping: 25 } 
+  },
+};
+
+const sectionTransitions: Record<string, Variants> = {
+  resources: genericCardVariants,
+  snippets: {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { 
+      opacity: 1, scale: 1, 
+      transition: { type: "spring" as const, stiffness: 260, damping: 20 } 
+    },
+    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
+  },
+  schedule: genericCardVariants,
+  analytics: {
+     hidden: { opacity: 0, y: 10 },
+     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  },
+  notes: {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { 
+      opacity: 1, scale: 1, 
+      transition: { type: "spring" as const, stiffness: 220, damping: 18 } 
+    },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.15 } }
+  },
+  tasks: {
+    hidden: { opacity: 0, x: 50 },
+    visible: { 
+      opacity: 1, x: 0, 
+      transition: { type: "spring" as const, stiffness: 240, damping: 24 } 
+    },
+    exit: { opacity: 0, x: -30, transition: { duration: 0.15 } }
+  },
+  collab: genericCardVariants,
 };
 
 // --- NAV BUTTON COMPONENT ---
@@ -43,8 +85,9 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
       {active && (
         <motion.div 
           layoutId="nav-bg"
-          className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md"
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          // Tailwind v4: bg-gradient-to-r -> bg-linear-to-r
+          className="absolute inset-0 bg-linear-to-r from-blue-600 to-indigo-600 shadow-lg"
+          transition={{ type: "spring" as const, bounce: 0.22, duration: 0.7 }}
           style={{ borderRadius: '9999px' }}
         />
       )}
@@ -56,7 +99,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics">("resources");
-  const [isCommandOpen, setIsCommandOpen] = useState(false); // Command Palette state
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [resources, setResources] = useState<Resource[]>([]);
@@ -126,7 +169,6 @@ export default function DashboardPage() {
     <div className="relative min-h-screen bg-slate-50 dark:bg-[#0B0F1A] transition-colors duration-500">
       <Toaster position="top-right" richColors />
       
-      {/* COMMAND PALETTE */}
       <CommandPalette 
         isOpen={isCommandOpen} 
         setIsOpen={setIsCommandOpen} 
@@ -134,8 +176,8 @@ export default function DashboardPage() {
         activeTab={activeTab}
       />
 
-      {/* NAVIGATION BAR */}
-      <div className="fixed bottom-6 left-0 right-0 z-[999] flex justify-center px-4">
+      {/* Tailwind v4: z-[999] -> z-999 */}
+      <div className="fixed bottom-6 left-0 right-0 z-999 flex justify-center px-4">
         <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-1.5 rounded-full shadow-2xl flex items-center max-w-full overflow-hidden">
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar px-1">
               <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Resources" />
@@ -160,12 +202,11 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Quick Search Trigger for Command Palette */}
             <button 
               onClick={() => setIsCommandOpen(true)}
-              className="hidden md:flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:border-blue-500 transition-all shadow-sm"
+              className="hidden md:flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:border-blue-500 transition-all shadow-sm group"
             >
-              <Search size={16} />
+              <Search size={16} className="group-hover:text-blue-500 transition-colors" />
               <span className="text-[10px] font-bold uppercase tracking-wider">Quick Search</span>
               <kbd className="text-[10px] font-mono opacity-40 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">⌘K</kbd>
             </button>
@@ -178,17 +219,23 @@ export default function DashboardPage() {
                 <AddResourceModal onAdd={handleAddResource} />
               </>
             )}
-            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-transform">
+            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 active:scale-95 transition-all">
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </header>
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+          <motion.div 
+            key={activeTab} 
+            variants={sectionTransitions[activeTab] || genericCardVariants}
+            initial="hidden" 
+            animate="visible" 
+            exit="exit"
+            className="w-full"
+          >
             {activeTab === "resources" && (
               <div className="space-y-10">
-                {/* Categories */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
                   {CATEGORIES.map((cat) => (
                     <button 
@@ -203,21 +250,22 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                {/* Resources Grid */}
                 {isLoading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3].map(i => <ResourceSkeleton key={i} />)}
                   </div>
                 ) : (
-                  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <motion.div variants={globalContainerVariants} initial="hidden" animate="visible" exit="exit" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredResources.length > 0 ? (
                       filteredResources.map((item) => (
                         <motion.div 
                           key={item.id} 
-                          variants={cardVariants} 
-                          className="relative p-6 rounded-[2rem] bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 shadow-sm group overflow-hidden"
+                          variants={genericCardVariants} 
+                          // Tailwind v4: rounded-[2rem] -> rounded-4xl
+                          className="relative p-6 rounded-4xl bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 shadow-sm group overflow-hidden"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          {/* Tailwind v4: bg-gradient-to-br -> bg-linear-to-br */}
+                          <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                           
                           <div className="relative z-10">
                             <div className="flex justify-between items-center mb-6">
@@ -227,7 +275,8 @@ export default function DashboardPage() {
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{item.name}</h3>
                             <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 line-clamp-2 mb-6">{item.description}</p>
                             <div className="flex gap-2">
-                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-[2] px-4 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-widest hover:opacity-90 transition-opacity">Visit Resource</a>
+                              {/* Tailwind v4: flex-[2] -> flex-2 */}
+                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-2 px-4 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-widest hover:opacity-90 transition-opacity">Visit Resource</a>
                               <button onClick={() => handleCopy(item.id, item.url)} className="flex-1 flex justify-center items-center p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">{copiedId === item.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button>
                             </div>
                           </div>
@@ -243,9 +292,24 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {activeTab === "schedule" && <ScheduleSection />}
-            {activeTab === "snippets" && <SnippetsSection />}
-            {activeTab === "analytics" && <AnalyticsSection />}
+            {activeTab === "snippets" && (
+                <motion.div variants={globalContainerVariants} initial="hidden" animate="visible" exit="exit">
+                    <SnippetsSection />
+                </motion.div>
+            )}
+
+            {activeTab === "schedule" && (
+                <motion.div variants={globalContainerVariants} initial="hidden" animate="visible" exit="exit">
+                    <ScheduleSection />
+                </motion.div>
+            )}
+            
+            {activeTab === "analytics" && (
+                <motion.div variants={globalContainerVariants} initial="hidden" animate="visible" exit="exit">
+                    <AnalyticsSection />
+                </motion.div>
+            )}
+
             {activeTab === "notes" && <NotesSection />}
             {activeTab === "tasks" && <TasksSection />}
             {activeTab === "collab" && <CollaborationSection />}
