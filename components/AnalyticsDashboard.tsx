@@ -25,13 +25,12 @@ export default function AnalyticsDashboard() {
   return (
     <div className="p-6 space-y-10 bg-white min-h-screen font-sans">
       
-      {/* 1. Header Section */}
       <div className="flex flex-col space-y-1">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Analytics Overview</h1>
         <p className="text-slate-500 text-sm font-medium">Monitoring your vault's performance and activity.</p>
       </div>
 
-      {/* 2. Sleek KPI Cards */}
+  
       <Grid numItemsSm={2} numItemsLg={3} className="gap-8">
         {stats.map((item) => (
           <div key={item.title} className="relative group p-6 bg-white border border-slate-100 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300">
@@ -44,7 +43,7 @@ export default function AnalyticsDashboard() {
         ))}
       </Grid>
 
-      {/* 3. Main Chart - Ultra Clean */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <Card className="lg:col-span-2 bg-white border-slate-100 ring-0 shadow-sm rounded-[2rem] p-8">
@@ -68,7 +67,7 @@ export default function AnalyticsDashboard() {
           </div>
         </Card>
 
-        {/* 4. Distribution - Minimal Pie */}
+  
         <Card className="bg-white border-slate-100 ring-0 shadow-sm rounded-[2rem] p-8">
           <Title className="text-slate-900 text-lg font-bold mb-2">Tech Split</Title>
           <DonutChart
