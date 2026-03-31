@@ -12,17 +12,22 @@ import CollaborationSection from "@/components/collabration-section";
 import AnalyticsSection from "@/components/AnalyticsDashboard"; 
 import CommandPalette from "@/components/command-platte";
 import OutreachTracker from "@/components/Outreach Tracker"; 
+import AIAssistant from "@/components/Ai-assistant"; 
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink
+  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink,
+  Bot // <--- Import Bot Icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
+// Type definition updated to include 'ai'
+type TabType = "resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional" | "ai";
+
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional">("resources");
+  const [activeTab, setActiveTab] = useState<TabType>("resources");
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -88,13 +93,14 @@ export default function DashboardPage() {
         toggleTheme={toggleTheme} addTask={(title) => toast.success(`Task: ${title}`)}
       />
 
-      {/* --- REFINED FLOATING NAVIGATION DOCK --- */}
+      {/* --- UPDATED FLOATING NAVIGATION DOCK --- */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-none px-4">
         <nav className="pointer-events-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl border border-slate-200/50 dark:border-white/10 p-1 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center overflow-hidden">
             <div className="flex items-center justify-center gap-0.5 md:gap-1 px-1"> 
                 <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Vault" />
                 <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={16} />} label="CRM" />
                 <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={16} />} label="Code" />
+                <NavBtn active={activeTab === 'ai'} onClick={() => setActiveTab("ai")} icon={<Bot size={16} />} label="AI" /> {/* <--- AI Button */}
                 <NavBtn active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={16} />} label="Stats" />
                 <NavBtn active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={16} />} label="Notes" />
                 <NavBtn active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={16} />} label="Tasks" />
@@ -105,7 +111,6 @@ export default function DashboardPage() {
       </div>
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-44">
-        {/* ... Header and Content remain the same ... */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black uppercase tracking-[0.2em] text-[10px]">
@@ -148,6 +153,7 @@ export default function DashboardPage() {
           <motion.div key={activeTab} initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} transition={{ duration: 0.4 }} className="w-full">
             {activeTab === "resources" && (
               <div className="space-y-12">
+                {/* Categories & Resources Grid (Same as before) */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
                   {CATEGORIES.map((cat) => (
                     <button 
@@ -195,6 +201,7 @@ export default function DashboardPage() {
             )}
             {activeTab === "professional" && <OutreachTracker />}
             {activeTab === "snippets" && <SnippetsSection />}
+            {activeTab === "ai" && <AIAssistant />} {/* <--- AI Section Render */}
             {activeTab === "schedule" && <ScheduleSection />}
             {activeTab === "analytics" && <AnalyticsSection />}
             {activeTab === "notes" && <NotesSection />}
@@ -207,7 +214,7 @@ export default function DashboardPage() {
   );
 }
 
-// --- OPTIMIZED NAVIGATION BUTTON ---
+// NavBtn function remains the same...
 function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
@@ -224,12 +231,9 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
           style={{ borderRadius: '9999px' }} 
         />
       )}
-      
       <span className={`relative z-30 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>
         {icon}
       </span>
-
-      {/* Label always visible but compressed for maximum fit */}
       <span className="relative z-30 text-[9px] md:text-[10px] font-black uppercase tracking-tighter md:tracking-widest">
         {label}
       </span>
