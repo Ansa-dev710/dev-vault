@@ -12,18 +12,16 @@ import CollaborationSection from "@/components/collabration-section";
 import AnalyticsSection from "@/components/AnalyticsDashboard"; 
 import CommandPalette from "@/components/command-platte";
 import OutreachTracker from "@/components/Outreach Tracker"; 
-import AIAssistant from "@/components/Ai-assistant"; 
+import AIAssistant from "@/components/Ai-assistant";
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink,
-  Bot // <--- Import Bot Icon
+  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink, Bot
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
-// Type definition updated to include 'ai'
 type TabType = "resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional" | "ai";
 
 export default function DashboardPage() {
@@ -93,20 +91,18 @@ export default function DashboardPage() {
         toggleTheme={toggleTheme} addTask={(title) => toast.success(`Task: ${title}`)}
       />
 
-      {/* --- UPDATED FLOATING NAVIGATION DOCK --- */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-none px-4">
-        <nav className="pointer-events-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl border border-slate-200/50 dark:border-white/10 p-1 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center overflow-hidden">
-            <div className="flex items-center justify-center gap-0.5 md:gap-1 px-1"> 
-                <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Vault" />
-                <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={16} />} label="CRM" />
-                <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={16} />} label="Code" />
-                <NavBtn active={activeTab === 'ai'} onClick={() => setActiveTab("ai")} icon={<Bot size={16} />} label="AI" /> {/* <--- AI Button */}
-                <NavBtn active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={16} />} label="Stats" />
-                <NavBtn active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={16} />} label="Notes" />
-                <NavBtn active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={16} />} label="Tasks" />
-                <NavBtn active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={16} />} label="Plan" />
-                <NavBtn active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={16} />} label="Team" />
-            </div>
+      {/* --- SMART DOCK NAVIGATION --- */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-auto px-4">
+        <nav className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-2 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] flex items-center gap-1 transition-all duration-500">
+            <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={20} />} label="Vault" />
+            <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={20} />} label="CRM" />
+            <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={20} />} label="Code" />
+            <NavBtn active={activeTab === 'ai'} onClick={() => setActiveTab("ai")} icon={<Bot size={20} />} label="AI" />
+            <NavBtn active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={20} />} label="Stats" />
+            <NavBtn active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={20} />} label="Notes" />
+            <NavBtn active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={20} />} label="Tasks" />
+            <NavBtn active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={20} />} label="Plan" />
+            <NavBtn active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={20} />} label="Team" />
         </nav>
       </div>
 
@@ -153,7 +149,6 @@ export default function DashboardPage() {
           <motion.div key={activeTab} initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} transition={{ duration: 0.4 }} className="w-full">
             {activeTab === "resources" && (
               <div className="space-y-12">
-                {/* Categories & Resources Grid (Same as before) */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
                   {CATEGORIES.map((cat) => (
                     <button 
@@ -201,7 +196,7 @@ export default function DashboardPage() {
             )}
             {activeTab === "professional" && <OutreachTracker />}
             {activeTab === "snippets" && <SnippetsSection />}
-            {activeTab === "ai" && <AIAssistant />} {/* <--- AI Section Render */}
+            {activeTab === "ai" && <AIAssistant />}
             {activeTab === "schedule" && <ScheduleSection />}
             {activeTab === "analytics" && <AnalyticsSection />}
             {activeTab === "notes" && <NotesSection />}
@@ -214,29 +209,40 @@ export default function DashboardPage() {
   );
 }
 
-// NavBtn function remains the same...
+// --- SMART BUTTON COMPONENT ---
 function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
       onClick={onClick} 
-      className={`relative flex items-center justify-center gap-1.5 px-2.5 py-2.5 md:px-4 md:py-3 rounded-full transition-all flex-shrink-0 z-20 group ${
-        active ? "text-white" : "text-slate-400 hover:text-slate-900 dark:hover:text-white"
+      className={`relative flex items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group rounded-full overflow-hidden ${
+        active 
+        ? "bg-blue-600 text-white px-5 py-3 shadow-[0_10px_30px_rgba(37,99,235,0.4)]" 
+        : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 p-3.5"
       }`}
     >
-      {active && (
-        <motion.div 
-          layoutId="nav-bg" 
-          className="absolute inset-0 bg-blue-600 shadow-lg shadow-blue-500/40" 
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
-          style={{ borderRadius: '9999px' }} 
-        />
-      )}
-      <span className={`relative z-30 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+      <span className={`relative z-10 ${active ? "scale-110" : "group-hover:scale-110"} transition-transform duration-300`}>
         {icon}
       </span>
-      <span className="relative z-30 text-[9px] md:text-[10px] font-black uppercase tracking-tighter md:tracking-widest">
+
+      <motion.span 
+        initial={false}
+        animate={{ 
+          width: active ? "auto" : 0,
+          opacity: active ? 1 : 0,
+          marginLeft: active ? 10 : 0
+        }}
+        transition={{ duration: 0.4, ease: "circOut" }}
+        className="overflow-hidden whitespace-nowrap text-[11px] font-black uppercase tracking-[0.15em] pointer-events-none"
+      >
         {label}
-      </span>
+      </motion.span>
+      
+      {/* Mini Tooltip for non-active buttons */}
+      {!active && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-5 px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10 translate-y-2 group-hover:translate-y-0">
+          {label}
+        </span>
+      )}
     </button>
   );
 }
