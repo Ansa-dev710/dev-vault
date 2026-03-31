@@ -16,22 +16,10 @@ import OutreachTracker from "@/components/Outreach Tracker";
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users, BarChart3, Briefcase
+  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink
 } from "lucide-react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
-
-// --- ANIMATION VARIANTS ---
-const globalContainerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
-  exit: { opacity: 0 }
-};
-
-const genericCardVariants: Variants = {
-  hidden: { y: 15, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 25 } },
-};
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional">("resources");
@@ -44,6 +32,18 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
+  // Keyboard shortcut listener for Quick Search (Ctrl+K / Cmd+K)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsCommandOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
   useEffect(() => {
     setIsMounted(true);
     const savedTheme = localStorage.getItem("vault-theme");
@@ -51,21 +51,9 @@ export default function DashboardPage() {
       setIsDark(true);
       document.documentElement.classList.add("dark");
     }
-
     const rawData = localStorage.getItem("dev-vault-resources");
-    if (rawData) {
-      try {
-        const parsed = JSON.parse(rawData);
-        setResources(Array.isArray(parsed) && parsed.length > 0 ? parsed : DEV_RESOURCES);
-      } catch (e) {
-        setResources(DEV_RESOURCES);
-      }
-    } else {
-      setResources(DEV_RESOURCES);
-      localStorage.setItem("dev-vault-resources", JSON.stringify(DEV_RESOURCES));
-    }
-
-    setTimeout(() => setIsLoading(false), 500);
+    setResources(rawData ? JSON.parse(rawData) : DEV_RESOURCES);
+    setTimeout(() => setIsLoading(false), 800);
   }, []);
 
   const toggleTheme = () => {
@@ -73,20 +61,6 @@ export default function DashboardPage() {
     setIsDark(nextDark);
     document.documentElement.classList.toggle("dark", nextDark);
     localStorage.setItem("vault-theme", nextDark ? "dark" : "light");
-  };
-
-  const handleAddResource = (newRes: Resource) => {
-    const updated = [newRes, ...resources];
-    setResources(updated);
-    localStorage.setItem("dev-vault-resources", JSON.stringify(updated));
-    toast.success("Added to Vault!");
-  };
-
-  const handleDelete = (id: number) => {
-    const updated = resources.filter((item) => item.id !== id);
-    setResources(updated);
-    localStorage.setItem("dev-vault-resources", JSON.stringify(updated));
-    toast.error("Resource removed");
   };
 
   const filteredResources = useMemo(() => {
@@ -100,105 +74,137 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#0B0F1A] transition-colors duration-500">
+    <div className="relative min-h-screen bg-slate-50 dark:bg-[#020617] transition-colors duration-700 overflow-x-hidden selection:bg-blue-500/30">
       <Toaster position="top-right" richColors />
       
+      {/* Background Mesh Gradient for Professional Look */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
+         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500 blur-[120px]" />
+         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600 blur-[120px]" />
+      </div>
+
       <CommandPalette 
         isOpen={isCommandOpen} setIsOpen={setIsCommandOpen} 
         setActiveTab={setActiveTab} activeTab={activeTab}
         toggleTheme={toggleTheme} addTask={(title) => toast.success(`Task: ${title}`)}
       />
 
-      {/* --- FLOATING BOTTOM NAVIGATION (THE FIX) --- */}
-      <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-4">
-        <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-2 rounded-full shadow-2xl flex items-center max-w-full overflow-x-auto no-scrollbar scroll-smooth">
-            <div className="flex items-center gap-1 min-w-max px-2"> 
-                <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Resources" />
-                <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={16} />} label="Professional" />
-                <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={16} />} label="Snippets" />
-                <NavBtn active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={16} />} label="Analytics" />
-                <NavBtn active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={16} />} label="Notes" />
-                <NavBtn active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={16} />} label="Tasks" />
-                <NavBtn active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={16} />} label="Schedule" />
-                <NavBtn active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={16} />} label="Team" />
+      {/* --- FLOATING NAVIGATION DOCK --- */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-none px-4">
+        <nav className="pointer-events-auto bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-slate-200/50 dark:border-white/5 p-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center overflow-x-auto no-scrollbar max-w-fit">
+            <div className="flex items-center gap-1 min-w-max"> 
+                <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={18} />} label="Vault" />
+                <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={18} />} label="CRM" />
+                <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={18} />} label="Code" />
+                <NavBtn active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={18} />} label="Stats" />
+                <NavBtn active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={18} />} label="Notes" />
+                <NavBtn active={activeTab === 'tasks'} onClick={() => setActiveTab("tasks")} icon={<CheckSquare size={18} />} label="Tasks" />
+                <NavBtn active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={18} />} label="Plan" />
+                <NavBtn active={activeTab === 'collab'} onClick={() => setActiveTab("collab")} icon={<Users size={18} />} label="Team" />
             </div>
         </nav>
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 pt-16 pb-40">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-slate-200 dark:border-slate-800 pb-10">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-              <Sparkles size={14} className="animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Workspace / {activeTab}</span>
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-44">
+        {/* HEADER SECTION */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black uppercase tracking-[0.2em] text-[10px]">
+              <Sparkles size={14} />
+              <span>Workspace / {activeTab}</span>
             </div>
-            <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">
-                {activeTab}
+            <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic">
+                {activeTab === 'resources' ? 'DevVault' : activeTab}
             </h1>
           </div>
           
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsCommandOpen(true)} className="hidden md:flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:border-blue-500 transition-all">
-              <Search size={16} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Quick Search</span>
-              <kbd className="text-[10px] font-mono opacity-40 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">⌘K</kbd>
-            </button>
-
             {activeTab === "resources" && (
               <div className="flex items-center gap-3">
                 <SearchBar onSearch={setSearchTerm} />
-                <AddResourceModal onAdd={handleAddResource} />
+                <AddResourceModal onAdd={(res) => {
+                    const up = [res, ...resources];
+                    setResources(up);
+                    localStorage.setItem("dev-vault-resources", JSON.stringify(up));
+                }} />
               </div>
             )}
 
-            <button onClick={toggleTheme} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-all text-slate-600 dark:text-slate-300">
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {/* QUICK SEARCH BUTTON */}
+            <button 
+              onClick={() => setIsCommandOpen(true)}
+              className="group flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 text-slate-500 hover:border-blue-500/50 transition-all shadow-sm backdrop-blur-md"
+            >
+              <Search size={18} className="group-hover:text-blue-500 transition-colors" />
+              <span className="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Search</span>
+              <kbd className="hidden lg:inline-flex h-6 items-center gap-1 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-2 font-mono text-[10px] font-bold text-slate-400">
+                ⌘K
+              </kbd>
+            </button>
+
+            <button onClick={toggleTheme} className="p-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm backdrop-blur-md">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
         </header>
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial="hidden" animate="visible" exit="exit" variants={globalContainerVariants} className="w-full">
+          <motion.div key={activeTab} initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} transition={{ duration: 0.4 }} className="w-full">
             {activeTab === "resources" && (
-              <div className="space-y-10">
-                {/* CATEGORIES TABS */}
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+              <div className="space-y-12">
+                {/* CATEGORY FILTER */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
                   {CATEGORIES.map((cat) => (
                     <button 
-                      key={cat} onClick={() => setActiveCategory(cat)} 
-                      className={`px-6 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${
-                        activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white shadow-lg" : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800"
-                      }`}
+                      key={cat} 
+                      onClick={() => setActiveCategory(cat)} 
+                      className={`px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white border-transparent shadow-lg shadow-blue-500/20" : "bg-white/50 dark:bg-slate-900/50 text-slate-400 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20"}`}
                     >
                       {cat}
                     </button>
                   ))}
                 </div>
 
-                {isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => <ResourceSkeleton key={i} />)}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredResources.map((item) => (
-                      <motion.div key={item.id} variants={genericCardVariants} className="relative p-6 rounded-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 group hover:shadow-xl transition-all">
-                        <div className="flex justify-between items-center mb-6">
-                          <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase rounded-lg border border-blue-100 dark:border-blue-500/20">{item.category}</span>
-                          <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={15} /></button>
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{item.name}</h3>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-6">{item.description}</p>
-                        <div className="flex gap-2">
-                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex-[2] px-4 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[9px] font-bold text-center uppercase tracking-widest">Visit Site</a>
-                          <button onClick={() => { navigator.clipboard.writeText(item.url); setCopiedId(item.id); toast.success("Link Copied!"); setTimeout(()=>setCopiedId(null), 2000); }} className="flex-1 flex justify-center items-center p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl transition-colors">
-                            {copiedId === item.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                {/* RESOURCE GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {isLoading ? [1,2,3].map(i => <ResourceSkeleton key={i} />) : filteredResources.map((item) => (
+                    <motion.div 
+                      key={item.id} 
+                      whileHover={{ y: -8 }}
+                      className="group relative p-8 rounded-[2.5rem] bg-white/40 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 backdrop-blur-xl hover:border-blue-500/40 transition-all duration-500 shadow-sm"
+                    >
+                      <div className="flex justify-between items-start mb-8">
+                        <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">
+                          {item.category}
+                        </span>
+                        <button onClick={() => {
+                            const up = resources.filter(r => r.id !== item.id);
+                            setResources(up);
+                            localStorage.setItem("dev-vault-resources", JSON.stringify(up));
+                            toast.error("Resource removed from vault");
+                        }} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tighter group-hover:text-blue-500 transition-colors">
+                        {item.name}
+                      </h3>
+                      <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-8 font-medium leading-relaxed">
+                        {item.description}
+                      </p>
+
+                      <div className="flex gap-3">
+                        <a href={item.url} target="_blank" className="flex-[3] flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black text-center uppercase tracking-widest hover:opacity-90 transition-all">
+                          Visit Site <ExternalLink size={14} />
+                        </a>
+                        <button onClick={() => { navigator.clipboard.writeText(item.url); setCopiedId(item.id); toast.success("Link copied!"); setTimeout(()=>setCopiedId(null), 2000); }} className="flex-1 flex justify-center items-center p-4 bg-slate-100/50 dark:bg-white/5 text-slate-400 rounded-2xl hover:bg-blue-500/10 hover:text-blue-500 transition-all">
+                          {copiedId === item.id ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
             
@@ -216,20 +222,25 @@ export default function DashboardPage() {
   );
 }
 
-// Fixed NavBtn to prevent shrinking
+// NAVIGATION BUTTON COMPONENT
 function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
       onClick={onClick} 
-      className={`relative flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase transition-all flex-shrink-0 whitespace-nowrap z-20 ${
-        active ? "text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+      className={`relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all flex-shrink-0 whitespace-nowrap z-20 ${
+        active ? "text-white" : "text-slate-400 hover:text-slate-900 dark:hover:text-white"
       }`}
     >
       {active && (
-        <motion.div layoutId="nav-bg" className="absolute inset-0 bg-blue-600 shadow-lg shadow-blue-600/20" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} style={{ borderRadius: '9999px' }} />
+        <motion.div 
+          layoutId="nav-bg" 
+          className="absolute inset-0 bg-blue-600 shadow-lg shadow-blue-500/30" 
+          transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} 
+          style={{ borderRadius: '9999px' }} 
+        />
       )}
       <span className="relative z-30">{icon}</span>
-      <span className="relative z-30 block">{label}</span>
+      <span className="relative z-30">{label}</span>
     </button>
   );
 }
