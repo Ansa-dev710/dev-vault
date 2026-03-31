@@ -11,11 +11,13 @@ import ScheduleSection from "@/components/sechdule-section";
 import CollaborationSection from "@/components/collabration-section";
 import AnalyticsSection from "@/components/AnalyticsDashboard"; 
 import CommandPalette from "@/components/command-platte";
+import OutreachTracker from "@/components/Outreach Tracker"; 
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users, BarChart3, CheckCircle 
+  Calendar as CalendarIcon, Users, BarChart3, CheckCircle,
+  Briefcase // Naya Icon
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { toast, Toaster } from "sonner";
@@ -33,7 +35,9 @@ const genericCardVariants: Variants = {
 };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics">("resources");
+  // Update activeTab Type
+  const [activeTab, setActiveTab] = useState<"resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional">("resources");
+  
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -43,11 +47,8 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  // --- INITIALIZATION & DATA RECOVERY ---
   useEffect(() => {
     setIsMounted(true);
-    
-    // 1. Theme Recovery
     const savedTheme = localStorage.getItem("vault-theme");
     if (savedTheme === "dark") {
       setIsDark(true);
@@ -57,7 +58,6 @@ export default function DashboardPage() {
       document.documentElement.classList.remove("dark");
     }
 
-    // 2. Resource Data Recovery (Fixed Logic)
     const rawData = localStorage.getItem("dev-vault-resources");
     if (rawData) {
       try {
@@ -78,7 +78,6 @@ export default function DashboardPage() {
     setTimeout(() => setIsLoading(false), 500);
   }, []);
 
-  // --- DARK MODE TOGGLE (Direct DOM Manipulation) ---
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
@@ -134,11 +133,15 @@ export default function DashboardPage() {
         toggleTheme={toggleTheme} addTask={handleQuickTask}
       />
 
-      {/* Floating Navigation */}
+      {/* Floating Navigation Menu */}
       <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4">
         <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-1.5 rounded-full shadow-2xl flex items-center max-w-full overflow-x-auto no-scrollbar">
             <NavButton active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={16} />} label="Resources" />
             <NavButton active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={16} />} label="Snippets" />
+            
+            {/* Professional Section Button Added */}
+            <NavButton active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={16} />} label="Professional" />
+            
             <NavButton active={activeTab === 'schedule'} onClick={() => setActiveTab("schedule")} icon={<CalendarIcon size={16} />} label="Schedule" />
             <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab("analytics")} icon={<BarChart3 size={16} />} label="Analytics" />
             <NavButton active={activeTab === 'notes'} onClick={() => setActiveTab("notes")} icon={<StickyNote size={16} />} label="Notes" />
@@ -154,7 +157,9 @@ export default function DashboardPage() {
               <Sparkles size={14} className="animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Workspace / {activeTab}</span>
             </div>
-            <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">{activeTab}</h1>
+            <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter capitalize italic">
+              {activeTab === 'professional' ? 'Professional Growth' : activeTab}
+            </h1>
           </div>
           
           <div className="flex items-center gap-3">
@@ -221,6 +226,9 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
+            
+            {/* New Sections Integrated */}
+            {activeTab === "professional" && <OutreachTracker />}
             {activeTab === "snippets" && <SnippetsSection />}
             {activeTab === "schedule" && <ScheduleSection />}
             {activeTab === "analytics" && <AnalyticsSection />}
