@@ -1,138 +1,205 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, CheckCircle2, Circle, AlertCircle, Calendar } from "lucide-react";
+import { Plus, GripVertical, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Task {
-  id: number;
-  text: string;
-  completed: boolean;
+  id: string;
+  content: string;
   priority: "Low" | "Medium" | "High";
 }
 
-export default function TasksSection() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [input, setInput] = useState("");
-  const [priority, setPriority] = useState<Task["priority"]>("Medium");
+interface Column {
+  id: string;
+  title: string;
+  tasks: Task[];
+}
 
+const TasksSection = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newTaskText, setNewTaskText] = useState("");
+  const [columns, setColumns] = useState<{ [key: string]: Column }>({
+    todo: { id: "todo", title: "To Do", tasks: [] },
+    inProgress: { id: "inProgress", title: "In Progress", tasks: [] },
+    done: { id: "done", title: "Completed", tasks: [] },
+  });
+
+  // Load from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem("dev-vault-tasks");
-    if (saved) setTasks(JSON.parse(saved));
+    if (saved) {
+      setColumns(JSON.parse(saved));
+    } else {
+      setColumns({
+        todo: { id: "todo", title: "To Do", tasks: [{ id: "1", content: "Master TypeScript", priority: "High" }] },
+        inProgress: { id: "inProgress", title: "In Progress", tasks: [] },
+        done: { id: "done", title: "Completed", tasks: [] },
+      });
+    }
   }, []);
 
-  const saveToLocal = (newTasks: Task[]) => {
-    setTasks(newTasks);
-    localStorage.setItem("dev-vault-tasks", JSON.stringify(newTasks));
+  const saveToLocal = (newCols: any) => {
+    setColumns(newCols);
+    localStorage.setItem("dev-vault-tasks", JSON.stringify(newCols));
   };
 
-  const addTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
+  const addTask = () => {
+    if (!newTaskText.trim()) return;
     const newTask: Task = {
-      id: Date.now(),
-      text: input,
-      completed: false,
-      priority,
+      id: Date.now().toString(),
+      content: newTaskText,
+      priority: "Medium",
     };
-
-    saveToLocal([newTask, ...tasks]);
-    setInput("");
-    toast.success("Task added to your list");
+    const newCols = { ...columns };
+    newCols.todo.tasks.unshift(newTask);
+    saveToLocal(newCols);
+    setNewTaskText("");
+    setIsModalOpen(false);
+    toast.success("Task added to board");
   };
 
-  const toggleTask = (id: number) => {
-    const updated = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-    saveToLocal(updated);
-  };
-
-  const deleteTask = (id: number) => {
-    saveToLocal(tasks.filter(t => t.id !== id));
+  const deleteTask = (colId: string, taskId: string) => {
+    const newCols = { ...columns };
+    newCols[colId].tasks = newCols[colId].tasks.filter(t => t.id !== taskId);
+    saveToLocal(newCols);
     toast.error("Task deleted");
   };
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Input Area */}
-      <form onSubmit={addTask} className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="What's the next big goal?"
-          className="flex-1 bg-transparent px-4 py-2 outline-none text-slate-700 dark:text-slate-300 font-bold"
-        />
-        
-        <div className="flex items-center gap-2 border-l border-slate-100 dark:border-slate-800 pl-4">
-          <select 
-            value={priority} 
-            onChange={(e) => setPriority(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-black uppercase outline-none cursor-pointer dark:text-slate-300"
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-          
-          <button type="submit" className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-all">
-            <Plus size={20} strokeWidth={3} />
-          </button>
-        </div>
-      </form>
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    if (!destination) return;
 
-      {/* Task List */}
-      <div className="space-y-3">
-        <AnimatePresence mode="popLayout">
-          {tasks.map((task) => (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={`group flex items-center justify-between p-5 rounded-2xl border transition-all ${
-                task.completed 
-                ? "bg-slate-50/50 dark:bg-slate-900/30 border-transparent opacity-60" 
-                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm"
-              }`}
-            >
-              <div className="flex items-center gap-4 flex-1">
-                <button onClick={() => toggleTask(task.id)} className="text-blue-600">
-                  {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} className="text-slate-300" />}
-                </button>
-                
-                <div className="flex flex-col">
-                  <span className={`font-bold transition-all ${task.completed ? "line-through text-slate-400" : "text-slate-700 dark:text-slate-200"}`}>
-                    {task.text}
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                     <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
-                       task.priority === 'High' ? 'bg-red-100 text-red-600 dark:bg-red-500/10' : 
-                       task.priority === 'Medium' ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/10' : 
-                       'bg-blue-100 text-blue-600 dark:bg-blue-500/10'
-                     }`}>
-                       {task.priority} Priority
-                     </span>
-                  </div>
-                </div>
+    const sourceCol = columns[source.droppableId];
+    const destCol = columns[destination.droppableId];
+    const sourceTasks = [...sourceCol.tasks];
+    const destTasks = [...destCol.tasks];
+
+    const [removed] = sourceTasks.splice(source.index, 1);
+
+    if (source.droppableId === destination.droppableId) {
+      sourceTasks.splice(destination.index, 0, removed);
+      saveToLocal({ ...columns, [source.droppableId]: { ...sourceCol, tasks: sourceTasks } });
+    } else {
+      destTasks.splice(destination.index, 0, removed);
+      saveToLocal({
+        ...columns,
+        [source.droppableId]: { ...sourceCol, tasks: sourceTasks },
+        [destination.droppableId]: { ...destCol, tasks: destTasks },
+      });
+    }
+  };
+
+  return (
+    <div className="p-4 max-w-7xl mx-auto pb-32 overflow-hidden">
+      <div className="flex justify-between items-center mb-10 mt-4 px-2">
+        <h2 className="text-4xl font-black italic tracking-tighter text-slate-900 dark:text-white">
+          Task <span className="text-blue-600">Board.</span>
+        </h2>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-blue-500/20"
+        >
+          <Plus size={16} /> New Task
+        </button>
+      </div>
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 px-2">
+          {Object.values(columns).map((column) => (
+            <div key={column.id} className="space-y-4">
+              <div className="px-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {column.title} — {column.tasks.length}
+                </span>
               </div>
 
-              <button 
-                onClick={() => deleteTask(task.id)}
-                className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"
-              >
-                <Trash2 size={18} />
+              <Droppable droppableId={column.id}>
+                {(provided, snapshot) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className={`min-h-[450px] p-3 rounded-[2.5rem] transition-all duration-300 ${
+                      snapshot.isDraggingOver ? "bg-blue-500/5 ring-1 ring-blue-500/10" : "bg-slate-100/40 dark:bg-white/[0.03]"
+                    }`}
+                  >
+                    {column.tasks.map((task, index) => (
+                      <Draggable key={task.id} draggableId={task.id} index={index}>
+                        {(dragProvided, dragSnapshot) => (
+                          <motion.div
+                            ref={dragProvided.innerRef}
+                            // CASTING TO ANY TO RESOLVE TYPESCRIPT EVENT CONFLICT
+                            {...(dragProvided.draggableProps as any)}
+                            {...(dragProvided.dragHandleProps as any)}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`group mb-3 p-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 rounded-3xl shadow-sm ${
+                              dragSnapshot.isDragging ? "shadow-2xl border-blue-500/50 z-[999] !rotate-2" : ""
+                            }`}
+                            style={{ ...dragProvided.draggableProps.style }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="mt-1 text-slate-300 group-hover:text-blue-500 transition-colors cursor-grab active:cursor-grabbing">
+                                <GripVertical size={16} />
+                              </div>
+                              <div className="flex-1 space-y-3">
+                                <p className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-tight leading-snug">
+                                  {task.content}
+                                </p>
+                                <div className="flex justify-between items-center">
+                                  <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-md border ${
+                                    task.priority === 'High' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                  }`}>
+                                    {task.priority}
+                                  </span>
+                                  <button 
+                                    onClick={() => deleteTask(column.id, task.id)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-all"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </div>
+          ))}
+        </div>
+      </DragDropContext>
+
+      {/* --- ADD TASK MODAL --- */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative w-full max-w-md bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/10 shadow-2xl">
+              <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+              <h3 className="text-2xl font-black italic tracking-tighter mb-6 dark:text-white">Add Task.</h3>
+              <textarea 
+                value={newTaskText} 
+                onChange={(e) => setNewTaskText(e.target.value)} 
+                className="w-full h-32 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all mb-6" 
+                placeholder="What needs to be done?"
+              />
+              <button onClick={addTask} className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-500/20">
+                Create Task
               </button>
             </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {tasks.length === 0 && (
-          <div className="text-center py-20 border-2 border-dashed border-slate-100 dark:border-slate-900 rounded-[3rem]">
-            <AlertCircle size={40} className="mx-auto text-slate-200 mb-4" />
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Your task list is empty</p>
           </div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default TasksSection;
