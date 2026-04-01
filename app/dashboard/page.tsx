@@ -13,16 +13,18 @@ import AnalyticsSection from "@/components/AnalyticsDashboard";
 import CommandPalette from "@/components/command-platte";
 import OutreachTracker from "@/components/Outreach Tracker"; 
 import AIAssistant from "@/components/Ai-assistant";
+import TaskPulse from "@/components/Task-Pulse";
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
   LayoutDashboard, StickyNote, CheckSquare, Code2, Sparkles, 
-  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink, Bot
+  Calendar as CalendarIcon, Users, BarChart3, Briefcase, ExternalLink, Bot, Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
-type TabType = "resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional" | "ai";
+// Added "pulse" to TabType
+type TabType = "resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional" | "ai" | "pulse";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>("resources");
@@ -93,8 +95,9 @@ export default function DashboardPage() {
 
       {/* --- SMART DOCK NAVIGATION --- */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-auto px-4">
-        <nav className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-2 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] flex items-center gap-1 transition-all duration-500">
+        <nav className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-2 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] flex items-center gap-1 transition-all duration-500 overflow-x-auto no-scrollbar max-w-full md:max-w-none">
             <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={20} />} label="Vault" />
+            <NavBtn active={activeTab === 'pulse'} onClick={() => setActiveTab("pulse")} icon={<Activity size={20} />} label="Pulse" />
             <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={20} />} label="CRM" />
             <NavBtn active={activeTab === 'snippets'} onClick={() => setActiveTab("snippets")} icon={<Code2 size={20} />} label="Code" />
             <NavBtn active={activeTab === 'ai'} onClick={() => setActiveTab("ai")} icon={<Bot size={20} />} label="AI" />
@@ -113,8 +116,8 @@ export default function DashboardPage() {
               <Sparkles size={14} />
               <span>Workspace / {activeTab}</span>
             </div>
-            <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic capitalize">
-                {activeTab === 'resources' ? 'DevVault' : activeTab}
+            <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic capitalize leading-none">
+                {activeTab === 'resources' ? 'DevVault' : activeTab === 'pulse' ? 'Project Pulse' : activeTab}
             </h1>
           </div>
           
@@ -146,7 +149,18 @@ export default function DashboardPage() {
         </header>
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} transition={{ duration: 0.4 }} className="w-full">
+          <motion.div 
+            key={activeTab} 
+            initial={{opacity:0, y:20}} 
+            animate={{opacity:1, y:0}} 
+            exit={{opacity:0, y:-20}} 
+            transition={{ duration: 0.4 }} 
+            className="w-full"
+          >
+            {/* NEW SECTION: PROJECT PULSE */}
+            {activeTab === "pulse" && <TaskPulse />}
+
+            {/* VAULT RESOURCES SECTION */}
             {activeTab === "resources" && (
               <div className="space-y-12">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
@@ -194,6 +208,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
             {activeTab === "professional" && <OutreachTracker />}
             {activeTab === "snippets" && <SnippetsSection />}
             {activeTab === "ai" && <AIAssistant />}
@@ -214,7 +229,7 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
   return (
     <button 
       onClick={onClick} 
-      className={`relative flex items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group rounded-full overflow-hidden ${
+      className={`relative flex items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group rounded-full overflow-hidden shrink-0 ${
         active 
         ? "bg-blue-600 text-white px-5 py-3 shadow-[0_10px_30px_rgba(37,99,235,0.4)]" 
         : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 p-3.5"
@@ -237,7 +252,6 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
         {label}
       </motion.span>
       
-      {/* Mini Tooltip for non-active buttons */}
       {!active && (
         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-5 px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10 translate-y-2 group-hover:translate-y-0">
           {label}

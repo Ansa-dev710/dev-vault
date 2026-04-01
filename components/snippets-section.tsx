@@ -37,14 +37,13 @@ const SnippetSkeleton = () => (
 
 const SnippetsSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All"); // New State
+  const [activeCategory, setActiveCategory] = useState("All");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSnippet, setSelectedSnippet] = useState<Snippet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  
   const categories = ["All", "Frontend", "Backend", "Fullstack", "UI/UX", "Database"];
 
   const defaultSnippets: Snippet[] = [
@@ -89,7 +88,6 @@ const SnippetsSection = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  
   const filteredSnippets = snippets.filter(s => {
     const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          s.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -99,13 +97,19 @@ const SnippetsSection = () => {
 
   return (
     <div className="w-full relative">
-      {/* --- HEADER SECTION --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div className="space-y-2">
-          <h2 className="text-4xl font-black italic tracking-tighter dark:text-white text-slate-900">
+      {/* --- CLEANED HEADER SECTION --- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 mb-2">
+             <span className="w-4 h-[1px] bg-blue-600/30"></span>
+             Workspace / Snippets
+          </div>
+          <h2 className="text-4xl font-black italic tracking-tighter dark:text-white text-slate-900 leading-none">
             Code <span className="text-blue-600">Vault.</span>
           </h2>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Reusable Logic Hub</p>
+          <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest pl-1">
+            Reusable Logic Hub
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -128,8 +132,8 @@ const SnippetsSection = () => {
         </div>
       </div>
 
-      {/* --- NEW: CATEGORY FILTERS --- */}
-      <div className="flex flex-wrap gap-3 mb-10 overflow-x-auto pb-2 no-scrollbar">
+      {/* --- CATEGORY FILTERS --- */}
+      <div className="flex flex-wrap gap-3 mb-12 overflow-x-auto pb-2 no-scrollbar">
         {categories.map((cat) => (
           <motion.button
             whileHover={{ y: -2 }}
@@ -147,7 +151,7 @@ const SnippetsSection = () => {
         ))}
       </div>
 
-      {/* --- MAIN GRID --- */}
+      {/* --- SNIPPETS GRID --- */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {loading ? (
           Array(4).fill(0).map((_, i) => <SnippetSkeleton key={i} />)
@@ -156,7 +160,7 @@ const SnippetsSection = () => {
             {filteredSnippets.map((snippet) => (
               <motion.div
                 key={snippet.id}
-                layout // Smooth transition between categories
+                layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
