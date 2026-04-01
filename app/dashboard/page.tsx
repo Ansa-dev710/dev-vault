@@ -14,6 +14,7 @@ import CommandPalette from "@/components/command-platte";
 import OutreachTracker from "@/components/Outreach Tracker"; 
 import AIAssistant from "@/components/Ai-assistant";
 import TaskPulse from "@/components/Task-Pulse";
+import QuickDock from "@/components/Quickdock"; 
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
@@ -23,7 +24,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
 
-// Added "pulse" to TabType
 type TabType = "resources" | "notes" | "tasks" | "snippets" | "schedule" | "collab" | "analytics" | "professional" | "ai" | "pulse";
 
 export default function DashboardPage() {
@@ -81,7 +81,6 @@ export default function DashboardPage() {
     <div className="relative min-h-screen bg-slate-50 dark:bg-[#020617] transition-colors duration-700 overflow-x-hidden selection:bg-blue-500/30">
       <Toaster position="top-right" richColors />
       
-      {/* Background Mesh Gradient */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500 blur-[120px]" />
          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600 blur-[120px]" />
@@ -93,9 +92,8 @@ export default function DashboardPage() {
         toggleTheme={toggleTheme} addTask={(title) => toast.success(`Task: ${title}`)}
       />
 
-      {/* --- SMART DOCK NAVIGATION --- */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-auto px-4">
-        <nav className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-2 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] flex items-center gap-1 transition-all duration-500 overflow-x-auto no-scrollbar max-w-full md:max-w-none">
+        <nav className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-2 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full md:max-w-none">
             <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={20} />} label="Vault" />
             <NavBtn active={activeTab === 'pulse'} onClick={() => setActiveTab("pulse")} icon={<Activity size={20} />} label="Pulse" />
             <NavBtn active={activeTab === 'professional'} onClick={() => setActiveTab("professional")} icon={<Briefcase size={20} />} label="CRM" />
@@ -110,7 +108,7 @@ export default function DashboardPage() {
       </div>
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-44">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black uppercase tracking-[0.2em] text-[10px]">
               <Sparkles size={14} />
@@ -137,7 +135,7 @@ export default function DashboardPage() {
               onClick={() => setIsCommandOpen(true)}
               className="group flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 text-slate-500 hover:border-blue-500/50 transition-all shadow-sm backdrop-blur-md"
             >
-              <Search size={18} className="group-hover:text-blue-500 transition-colors" />
+              <Search size={18} />
               <span className="hidden sm:inline text-[11px] font-black uppercase tracking-widest">Search</span>
               <kbd className="hidden lg:inline-flex h-6 items-center gap-1 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-2 font-mono text-[10px] font-bold text-slate-400">⌘K</kbd>
             </button>
@@ -148,6 +146,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
+        {/* --- QUICK DOCK INTEGRATED HERE --- */}
+        <QuickDock />
+
         <AnimatePresence mode="wait">
           <motion.div 
             key={activeTab} 
@@ -157,10 +158,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.4 }} 
             className="w-full"
           >
-            {/* NEW SECTION: PROJECT PULSE */}
             {activeTab === "pulse" && <TaskPulse />}
-
-            {/* VAULT RESOURCES SECTION */}
             {activeTab === "resources" && (
               <div className="space-y-12">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
@@ -224,12 +222,11 @@ export default function DashboardPage() {
   );
 }
 
-// --- SMART BUTTON COMPONENT ---
 function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
       onClick={onClick} 
-      className={`relative flex items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group rounded-full overflow-hidden shrink-0 ${
+      className={`relative flex items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group rounded-full shrink-0 ${
         active 
         ? "bg-blue-600 text-white px-5 py-3 shadow-[0_10px_30px_rgba(37,99,235,0.4)]" 
         : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 p-3.5"
@@ -251,12 +248,6 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
       >
         {label}
       </motion.span>
-      
-      {!active && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-5 px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10 translate-y-2 group-hover:translate-y-0">
-          {label}
-        </span>
-      )}
     </button>
   );
 }

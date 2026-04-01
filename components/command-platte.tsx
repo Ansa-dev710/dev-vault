@@ -109,7 +109,7 @@ export default function CommandPalette({
               </div>
             </div>
 
-            {/* Content / Suggestions */}
+          
             <div className="p-3">
               <div className="mb-4">
                 <p className="text-[10px] text-slate-400 px-3 py-1 font-bold uppercase tracking-widest mb-2 flex justify-between">
@@ -151,7 +151,7 @@ export default function CommandPalette({
                 </div>
               </div>
               
-              {/* Keyboard Footer */}
+          
               <div className="mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center px-3">
                  <div className="flex gap-4">
                     <span className="text-[9px] text-slate-400 flex items-center gap-1 italic"><Search size={10} /> Searching active...</span>
