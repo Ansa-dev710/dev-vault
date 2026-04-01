@@ -15,6 +15,7 @@ import OutreachTracker from "@/components/Outreach Tracker";
 import AIAssistant from "@/components/Ai-assistant";
 import TaskPulse from "@/components/Task-Pulse";
 import QuickDock from "@/components/Quickdock"; 
+import NewsFeed from "@/components/NewsFeed";
 
 import { 
   Trash2, Moon, Sun, Copy, Check, Search,
@@ -146,7 +147,6 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* --- QUICK DOCK INTEGRATED HERE --- */}
         <QuickDock />
 
         <AnimatePresence mode="wait">
@@ -159,51 +159,71 @@ export default function DashboardPage() {
             className="w-full"
           >
             {activeTab === "pulse" && <TaskPulse />}
+            
+            {/* VAULT RESOURCES WITH SIDE PANEL */}
             {activeTab === "resources" && (
-              <div className="space-y-12">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
-                  {CATEGORIES.map((cat) => (
-                    <button 
-                      key={cat} 
-                      onClick={() => setActiveCategory(cat)} 
-                      className={`px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white border-transparent shadow-lg shadow-blue-500/20" : "bg-white/50 dark:bg-slate-900/50 text-slate-400 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20"}`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+              <div className="flex flex-col lg:flex-row gap-10 items-start">
+                {/* Main Content Area */}
+                <div className="flex-[2.5] space-y-12 w-full">
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4">
+                    {CATEGORIES.map((cat) => (
+                      <button 
+                        key={cat} 
+                        onClick={() => setActiveCategory(cat)} 
+                        className={`px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCategory === cat ? "bg-slate-900 dark:bg-blue-600 text-white border-transparent shadow-lg shadow-blue-500/20" : "bg-white/50 dark:bg-slate-900/50 text-slate-400 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20"}`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {isLoading ? [1,2].map(i => <ResourceSkeleton key={i} />) : filteredResources.map((item) => (
+                      <motion.div 
+                        key={item.id} 
+                        whileHover={{ y: -8 }}
+                        className="group relative p-8 rounded-[2.5rem] bg-white/40 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 backdrop-blur-xl hover:border-blue-500/40 transition-all duration-500 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start mb-8">
+                          <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">
+                            {item.category}
+                          </span>
+                          <button onClick={() => {
+                              const up = resources.filter(r => r.id !== item.id);
+                              setResources(up);
+                              localStorage.setItem("dev-vault-resources", JSON.stringify(up));
+                              toast.error("Resource removed");
+                          }} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tighter group-hover:text-blue-500 transition-colors">{item.name}</h3>
+                        <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-8 font-medium leading-relaxed">{item.description}</p>
+                        <div className="flex gap-3">
+                          <a href={item.url} target="_blank" className="flex-[3] flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all">Visit Site <ExternalLink size={14} /></a>
+                          <button onClick={() => { navigator.clipboard.writeText(item.url); setCopiedId(item.id); toast.success("Copied!"); setTimeout(()=>setCopiedId(null), 2000); }} className="flex-1 flex justify-center items-center p-4 bg-slate-100/50 dark:bg-white/5 text-slate-400 rounded-2xl hover:bg-blue-500/10 hover:text-blue-500 transition-all">
+                            {copiedId === item.id ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {isLoading ? [1,2,3].map(i => <ResourceSkeleton key={i} />) : filteredResources.map((item) => (
-                    <motion.div 
-                      key={item.id} 
-                      whileHover={{ y: -8 }}
-                      className="group relative p-8 rounded-[2.5rem] bg-white/40 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 backdrop-blur-xl hover:border-blue-500/40 transition-all duration-500 shadow-sm"
-                    >
-                      <div className="flex justify-between items-start mb-8">
-                        <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">
-                          {item.category}
-                        </span>
-                        <button onClick={() => {
-                            const up = resources.filter(r => r.id !== item.id);
-                            setResources(up);
-                            localStorage.setItem("dev-vault-resources", JSON.stringify(up));
-                            toast.error("Resource removed");
-                        }} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                      <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tighter group-hover:text-blue-500 transition-colors">{item.name}</h3>
-                      <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-8 font-medium leading-relaxed">{item.description}</p>
-                      <div className="flex gap-3">
-                        <a href={item.url} target="_blank" className="flex-[3] flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all">Visit Site <ExternalLink size={14} /></a>
-                        <button onClick={() => { navigator.clipboard.writeText(item.url); setCopiedId(item.id); toast.success("Copied!"); setTimeout(()=>setCopiedId(null), 2000); }} className="flex-1 flex justify-center items-center p-4 bg-slate-100/50 dark:bg-white/5 text-slate-400 rounded-2xl hover:bg-blue-500/10 hover:text-blue-500 transition-all">
-                          {copiedId === item.id ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                {/* Sticky Side Panel */}
+                <aside className="flex-1 w-full lg:sticky lg:top-24 space-y-8">
+                  <NewsFeed />
+                  
+                  {/* System Status Card */}
+                  <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">System Health</h4>
+                    <div className="space-y-5">
+                      <StatusRow label="Cloud Sync" status="Active" color="text-emerald-500" />
+                      <StatusRow label="Vault Nodes" status="Stable" color="text-blue-500" />
+                      <StatusRow label="AI Engine" status="Ready" color="text-purple-500" />
+                    </div>
+                  </div>
+                </aside>
               </div>
             )}
 
@@ -222,6 +242,19 @@ export default function DashboardPage() {
   );
 }
 
+// Helper Component for Status Rows
+function StatusRow({ label, status, color }: { label: string, status: string, color: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2">
+        <div className={`w-1.5 h-1.5 rounded-full bg-current ${color} animate-pulse`} />
+        <span className={`text-[10px] font-black uppercase tracking-tighter ${color}`}>{status}</span>
+      </div>
+    </div>
+  );
+}
+
 function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button 
@@ -235,14 +268,9 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
       <span className={`relative z-10 ${active ? "scale-110" : "group-hover:scale-110"} transition-transform duration-300`}>
         {icon}
       </span>
-
       <motion.span 
         initial={false}
-        animate={{ 
-          width: active ? "auto" : 0,
-          opacity: active ? 1 : 0,
-          marginLeft: active ? 10 : 0
-        }}
+        animate={{ width: active ? "auto" : 0, opacity: active ? 1 : 0, marginLeft: active ? 10 : 0 }}
         transition={{ duration: 0.4, ease: "circOut" }}
         className="overflow-hidden whitespace-nowrap text-[11px] font-black uppercase tracking-[0.15em] pointer-events-none"
       >
