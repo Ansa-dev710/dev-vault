@@ -8,7 +8,6 @@ import {
   X, Calendar, Edit3, Trash2, Share2 
 } from "lucide-react";
 import { toast } from "sonner";
-// --- 1. Modal Import Karein ---
 import AddSnippetModal from "./add-Snippet-model";
 
 interface Snippet {
@@ -38,12 +37,15 @@ const SnippetSkeleton = () => (
 
 const SnippetsSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All"); // New State
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSnippet, setSelectedSnippet] = useState<Snippet | null>(null);
-  // --- 2. Modal State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  
+  const categories = ["All", "Frontend", "Backend", "Fullstack", "UI/UX", "Database"];
 
   const defaultSnippets: Snippet[] = [
     {
@@ -65,7 +67,6 @@ const SnippetsSection = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // --- 3. CRUD Logics ---
   const handleAddSnippet = (newSnippet: Snippet) => {
     const updated = [newSnippet, ...snippets];
     setSnippets(updated);
@@ -88,14 +89,18 @@ const SnippetsSection = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const filteredSnippets = snippets.filter(s => 
-    s.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  
+  const filteredSnippets = snippets.filter(s => {
+    const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         s.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = activeCategory === "All" || s.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="w-full relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+      {/* --- HEADER SECTION --- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div className="space-y-2">
           <h2 className="text-4xl font-black italic tracking-tighter dark:text-white text-slate-900">
             Code <span className="text-blue-600">Vault.</span>
@@ -114,7 +119,6 @@ const SnippetsSection = () => {
               className="pl-12 pr-6 py-4 w-full md:w-80 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-sm dark:text-white backdrop-blur-md"
             />
           </div>
-          {/* --- 4. Plus Button Click Fix --- */}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="p-4 bg-blue-600 text-white rounded-2xl hover:scale-105 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
@@ -124,6 +128,26 @@ const SnippetsSection = () => {
         </div>
       </div>
 
+      {/* --- NEW: CATEGORY FILTERS --- */}
+      <div className="flex flex-wrap gap-3 mb-10 overflow-x-auto pb-2 no-scrollbar">
+        {categories.map((cat) => (
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+              activeCategory === cat
+                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/40"
+                : "bg-white dark:bg-slate-900/50 border-slate-200 dark:border-white/10 text-slate-400 hover:border-blue-500/50"
+            }`}
+          >
+            {cat}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* --- MAIN GRID --- */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {loading ? (
           Array(4).fill(0).map((_, i) => <SnippetSkeleton key={i} />)
@@ -132,7 +156,7 @@ const SnippetsSection = () => {
             {filteredSnippets.map((snippet) => (
               <motion.div
                 key={snippet.id}
-                layout
+                layout // Smooth transition between categories
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -179,6 +203,7 @@ const SnippetsSection = () => {
         )}
       </div>
 
+      {/* --- DRAWER --- */}
       <AnimatePresence>
         {selectedSnippet && (
           <>
@@ -201,7 +226,6 @@ const SnippetsSection = () => {
                   <h2 className="text-xl font-bold dark:text-white tracking-tight italic text-slate-900">Snippet <span className="text-blue-500 font-normal not-italic">Inspector</span></h2>
                 </div>
                 <div className="flex gap-2">
-                  {/* --- DELETE BUTTON --- */}
                   <button 
                     onClick={() => handleDeleteSnippet(selectedSnippet.id)}
                     className="p-3 text-slate-400 hover:text-rose-500 transition-colors"
@@ -254,7 +278,6 @@ const SnippetsSection = () => {
         )}
       </AnimatePresence>
 
-      {/* --- 5. Modal Component Call --- */}
       <AddSnippetModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
