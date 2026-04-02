@@ -20,27 +20,28 @@ interface Column {
 const TasksSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState("");
+  const [mounted, setMounted] = useState(false); // Hydration fix
+  
   const [columns, setColumns] = useState<{ [key: string]: Column }>({
     todo: { id: "todo", title: "To Do", tasks: [] },
     inProgress: { id: "inProgress", title: "In Progress", tasks: [] },
     done: { id: "done", title: "Completed", tasks: [] },
   });
 
-  // Load from LocalStorage
+  // 1. Handle Hydration (Next.js fix)
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem("dev-vault-tasks");
     if (saved) {
-      setColumns(JSON.parse(saved));
-    } else {
-      setColumns({
-        todo: { id: "todo", title: "To Do", tasks: [{ id: "1", content: "Master TypeScript", priority: "High" }] },
-        inProgress: { id: "inProgress", title: "In Progress", tasks: [] },
-        done: { id: "done", title: "Completed", tasks: [] },
-      });
+      try {
+        setColumns(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse tasks", e);
+      }
     }
   }, []);
 
-  const saveToLocal = (newCols: any) => {
+  const saveToLocal = (newCols: { [key: string]: Column }) => {
     setColumns(newCols);
     localStorage.setItem("dev-vault-tasks", JSON.stringify(newCols));
   };
@@ -48,12 +49,12 @@ const TasksSection = () => {
   const addTask = () => {
     if (!newTaskText.trim()) return;
     const newTask: Task = {
-      id: Date.now().toString(),
+      id: `task-${Date.now()}`,
       content: newTaskText,
       priority: "Medium",
     };
     const newCols = { ...columns };
-    newCols.todo.tasks.unshift(newTask);
+    newCols.todo.tasks = [newTask, ...newCols.todo.tasks];
     saveToLocal(newCols);
     setNewTaskText("");
     setIsModalOpen(false);
@@ -73,26 +74,32 @@ const TasksSection = () => {
 
     const sourceCol = columns[source.droppableId];
     const destCol = columns[destination.droppableId];
+    
+    // Safety check for undefined columns
+    if (!sourceCol || !destCol) return;
+
     const sourceTasks = [...sourceCol.tasks];
-    const destTasks = [...destCol.tasks];
+    const destTasks = source.droppableId === destination.droppableId 
+      ? sourceTasks 
+      : [...destCol.tasks];
 
     const [removed] = sourceTasks.splice(source.index, 1);
+    destTasks.splice(destination.index, 0, removed);
 
-    if (source.droppableId === destination.droppableId) {
-      sourceTasks.splice(destination.index, 0, removed);
-      saveToLocal({ ...columns, [source.droppableId]: { ...sourceCol, tasks: sourceTasks } });
-    } else {
-      destTasks.splice(destination.index, 0, removed);
-      saveToLocal({
-        ...columns,
-        [source.droppableId]: { ...sourceCol, tasks: sourceTasks },
-        [destination.droppableId]: { ...destCol, tasks: destTasks },
-      });
-    }
+    const updatedCols = {
+      ...columns,
+      [source.droppableId]: { ...sourceCol, tasks: sourceTasks },
+      [destination.droppableId]: { ...destCol, tasks: destTasks },
+    };
+
+    saveToLocal(updatedCols);
   };
 
+  // Prevent rendering until client-side hydration is done
+  if (!mounted) return null;
+
   return (
-    <div className="p-4 max-w-7xl mx-auto pb-32 overflow-hidden">
+    <div className="p-4 max-w-7xl mx-auto pb-32">
       <div className="flex justify-between items-center mb-10 mt-4 px-2">
         <h2 className="text-4xl font-black italic tracking-tighter text-slate-900 dark:text-white">
           Task <span className="text-blue-600">Board.</span>
@@ -109,9 +116,12 @@ const TasksSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 px-2">
           {Object.values(columns).map((column) => (
             <div key={column.id} className="space-y-4">
-              <div className="px-4">
+              <div className="px-4 flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  {column.title} — {column.tasks.length}
+                  {column.title}
+                </span>
+                <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-lg text-slate-500">
+                  {column.tasks?.length || 0}
                 </span>
               </div>
 
@@ -120,29 +130,26 @@ const TasksSection = () => {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className={`min-h-[450px] p-3 rounded-[2.5rem] transition-all duration-300 ${
-                      snapshot.isDraggingOver ? "bg-blue-500/5 ring-1 ring-blue-500/10" : "bg-slate-100/40 dark:bg-white/[0.03]"
+                    className={`min-h-[500px] p-3 rounded-[2.5rem] transition-all duration-300 border border-transparent ${
+                      snapshot.isDraggingOver 
+                        ? "bg-blue-500/5 border-blue-500/20 ring-4 ring-blue-500/5" 
+                        : "bg-slate-100/40 dark:bg-white/[0.02]"
                     }`}
                   >
-                    {column.tasks.map((task, index) => (
+                    {column.tasks?.map((task, index) => (
                       <Draggable key={task.id} draggableId={task.id} index={index}>
                         {(dragProvided, dragSnapshot) => (
-                          <motion.div
+                          <div
                             ref={dragProvided.innerRef}
-                            // CASTING TO ANY TO RESOLVE TYPESCRIPT EVENT CONFLICT
-                            {...(dragProvided.draggableProps as any)}
-                            {...(dragProvided.dragHandleProps as any)}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`group mb-3 p-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 rounded-3xl shadow-sm ${
-                              dragSnapshot.isDragging ? "shadow-2xl border-blue-500/50 z-[999] !rotate-2" : ""
+                            {...dragProvided.draggableProps}
+                            {...dragProvided.dragHandleProps}
+                            className={`group mb-3 p-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 rounded-3xl transition-shadow ${
+                              dragSnapshot.isDragging ? "shadow-2xl ring-2 ring-blue-500/50 scale-[1.02]" : "shadow-sm"
                             }`}
                             style={{ ...dragProvided.draggableProps.style }}
                           >
                             <div className="flex items-start gap-3">
-                              <div className="mt-1 text-slate-300 group-hover:text-blue-500 transition-colors cursor-grab active:cursor-grabbing">
-                                <GripVertical size={16} />
-                              </div>
+                              <GripVertical size={16} className="mt-1 text-slate-300 group-hover:text-blue-500" />
                               <div className="flex-1 space-y-3">
                                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-tight leading-snug">
                                   {task.content}
@@ -162,7 +169,7 @@ const TasksSection = () => {
                                 </div>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
                         )}
                       </Draggable>
                     ))}
@@ -175,7 +182,7 @@ const TasksSection = () => {
         </div>
       </DragDropContext>
 
-      {/* --- ADD TASK MODAL --- */}
+      {/* --- MODAL --- */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4">
