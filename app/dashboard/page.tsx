@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
-// Components Imports
+
 import { DEV_RESOURCES, CATEGORIES, Resource } from "@/lib/constant";
 import SearchBar from "@/components/search-bar";
 import AddResourceModal from "@/components/add-resource-model";
@@ -84,7 +84,7 @@ export default function DashboardPage() {
     <div className="relative min-h-screen bg-[#fdfdfd] dark:bg-[#020617] transition-colors duration-700 overflow-x-hidden selection:bg-blue-500/30">
       <Toaster position="top-right" richColors />
       
-      {/* Subtle Background Pattern */}
+
       <div className="fixed inset-0 z-0 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff05_1px,transparent_1px)] bg-[size:30px_30px] opacity-50" />
          <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
@@ -97,7 +97,7 @@ export default function DashboardPage() {
         toggleTheme={toggleTheme} addTask={(title) => toast.success(`Task: ${title}`)}
       />
 
-      {/* Floating Bottom Navigation */}
+
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center pointer-events-auto px-4">
         <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full md:max-w-none">
             <NavBtn active={activeTab === 'resources'} onClick={() => setActiveTab("resources")} icon={<LayoutDashboard size={19} />} label="Vault" />
@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-10 pb-44">
         
-        {/* REFINED HEADER: FIXED OVERLAP & TYPOGRAPHY */}
+      
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div className="space-y-5">
             <Link href="/" className="group inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors duration-300">
@@ -137,7 +137,7 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          {/* SEARCH & ACTIONS: NO OVERLAP FLEXBOX */}
+    
           <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
             {activeTab === "resources" && (
               <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* PINNED STACK */}
+      
         <div className="mb-14">
            <h4 className="text-[9px] font-bold uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 mb-6 flex items-center gap-4">
              Pinned Resources
