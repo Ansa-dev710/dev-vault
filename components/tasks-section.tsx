@@ -50,9 +50,8 @@ const TasksSection = () => {
     localStorage.setItem("dev-vault-tasks", JSON.stringify(newCols));
   };
 
-  // --- SAFE STATS CALCULATION ---
-  // useMemo use kar rahe hain taake calculation sirf tab ho jab columns change hon
-  const stats = useMemo(() => {
+  
+   const stats = useMemo(() => {
     if (!mounted) return { total: 0, completed: 0, progress: 0 };
     
     const total = Object.values(columns).reduce((acc, col) => acc + (col?.tasks?.length || 0), 0);
@@ -107,7 +106,7 @@ const TasksSection = () => {
 
   return (
     <div className="p-4 max-w-7xl mx-auto pb-32">
-      {/* Stats Dashboard */}
+    
       <div className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-slate-900/50 p-8 rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-sm">
         <div className="space-y-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Project Progress</p>

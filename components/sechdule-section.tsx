@@ -55,7 +55,7 @@ export default function ScheduleSection() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
       
-      {/* --- LEFT SIDE: MINI CALENDAR --- */}
+    
       <div className="lg:col-span-4 space-y-8">
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-8 rounded-[3rem] shadow-sm">
           <div className="flex items-center justify-between mb-8">
@@ -65,7 +65,7 @@ export default function ScheduleSection() {
             <CalendarDays size={18} className="text-slate-400" />
           </div>
 
-          {/* FIX: Weekday Headers with unique index-based keys */}
+      
           <div className="grid grid-cols-7 gap-1 text-center mb-4">
             {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
               <span 
@@ -76,7 +76,7 @@ export default function ScheduleSection() {
               </span>
             ))}
             
-            {/* FIX: Calendar Days with explicit unique keys */}
+          
             {Array.from({ length: 31 }).map((_, i) => {
               const dayNum = i + 1;
               const isToday = dayNum === today.getDate();
@@ -96,7 +96,7 @@ export default function ScheduleSection() {
           </div>
         </div>
 
-        {/* Quick Action Card */}
+
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[3rem] text-white shadow-2xl shadow-blue-500/20 group overflow-hidden relative">
           <div className="relative z-10">
             <h4 className="text-xl font-bold mb-2">New Event</h4>
@@ -109,7 +109,7 @@ export default function ScheduleSection() {
         </div>
       </div>
 
-      {/* --- RIGHT SIDE: TIMELINE --- */}
+  
       <div className="lg:col-span-8 space-y-8">
         <div className="flex items-end justify-between px-2">
           <div>
