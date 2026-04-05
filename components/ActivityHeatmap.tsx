@@ -32,14 +32,14 @@ const ActivityHeatmap = () => {
 
   return (
     <div className="w-full space-y-10">
-      {/* --- STATS CARDS --- */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard icon={<Flame className="text-orange-500" />} label="Current Streak" value="12 Days" />
         <StatCard icon={<Activity className="text-blue-500" />} label="Total Activities" value="148" />
         <StatCard icon={<Trophy className="text-amber-500" />} label="Best Day" value="8 Tasks" />
       </div>
 
-      {/* --- HEATMAP GRID --- */}
+    
       <div className="p-8 rounded-[2.5rem] bg-white/40 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 backdrop-blur-xl shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
